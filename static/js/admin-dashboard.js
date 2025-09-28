@@ -139,14 +139,7 @@ function setupEventListeners() {
         });
     });
     
-    // Logout functionality
-    const logoutBtn = document.querySelector('.logout');
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            logout();
-        });
-    }
+    // Logout functionality - handled by onclick attribute in templates
 }
 
 function checkAuthentication() {
@@ -454,27 +447,7 @@ function viewAnalytics() {
     showAnalytics();
 }
 
-function logout() {
-    if (confirm('Are you sure you want to logout?')) {
-        fetch('/api/auth/logout/', {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': getCSRFToken(),
-                'Content-Type': 'application/json',
-            },
-        })
-        .then(response => {
-            if (response.ok) {
-                window.location.href = '/admin-login/';
-            }
-        })
-        .catch(error => {
-            console.error('Logout error:', error);
-            // Force redirect even if logout fails
-            window.location.href = '/admin-login/';
-        });
-    }
-}
+// Logout function removed - using handleLogoutClick() instead
 
 // Utility functions
 function formatCurrency(amount) {
@@ -522,6 +495,13 @@ function handleSettingsClick() {
 
 function handleLogoutClick() {
     console.log('Logout clicked');
+    
+    // Prevent multiple executions
+    if (window.logoutInProgress) {
+        return;
+    }
+    window.logoutInProgress = true;
+    
     // Show confirmation dialog
     if (confirm('Are you sure you want to logout?')) {
         // Perform logout
@@ -541,12 +521,17 @@ function handleLogoutClick() {
                 }, 1000);
             } else {
                 showNotification('Logout failed. Please try again.', 'error');
+                window.logoutInProgress = false; // Reset flag on failure
             }
         })
         .catch(error => {
             console.error('Logout error:', error);
             showNotification('Logout failed. Please try again.', 'error');
+            window.logoutInProgress = false; // Reset flag on error
         });
+    } else {
+        // User cancelled logout, reset the flag
+        window.logoutInProgress = false;
     }
 }
 
@@ -556,7 +541,6 @@ window.adminDashboard = {
     viewOrders,
     manageInventory,
     viewAnalytics,
-    logout,
     showNotification,
     handleProfileClick,
     handleSettingsClick,
