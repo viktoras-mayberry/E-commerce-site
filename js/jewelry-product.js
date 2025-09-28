@@ -151,23 +151,23 @@
             } catch (error) {
                 console.error('Error adding to cart:', error);
                 // Fallback to local storage
-                const existingItem = cart.find(item => item.id === product.id);
-                
-                if (existingItem) {
-                    existingItem.quantity += quantity;
-                } else {
-                    cart.push({
-                        id: product.id,
-                        name: product.name,
-                        price: product.price,
+            const existingItem = cart.find(item => item.id === product.id);
+            
+            if (existingItem) {
+                existingItem.quantity += quantity;
+            } else {
+                cart.push({
+                    id: product.id,
+                    name: product.name,
+                    price: product.price,
                         image: product.primary_image?.image || product.image,
-                        quantity: quantity
-                    });
-                }
-                
-                localStorage.setItem('cart', JSON.stringify(cart));
-                updateCartCount();
-                showAddedToCartMessage(product.name);
+                    quantity: quantity
+                });
+            }
+            
+            localStorage.setItem('cart', JSON.stringify(cart));
+            updateCartCount();
+            showAddedToCartMessage(product.name);
             }
         }
         
@@ -191,9 +191,9 @@
                 console.error('Error removing from cart:', error);
                 // Fallback to local storage
                 cart = cart.filter(item => item.id !== cartItemId);
-                localStorage.setItem('cart', JSON.stringify(cart));
-                updateCartCount();
-                renderCart();
+            localStorage.setItem('cart', JSON.stringify(cart));
+            updateCartCount();
+            renderCart();
             }
         }
         
@@ -222,19 +222,19 @@
                 console.error('Error updating quantity:', error);
                 // Fallback to local storage
                 const item = cart.find(item => item.id === cartItemId);
-                if (item) {
+            if (item) {
                     if (isAbsolute) {
                         item.quantity = quantityChange;
                     } else {
                         item.quantity += quantityChange;
                     }
                     
-                    if (item.quantity <= 0) {
+                if (item.quantity <= 0) {
                         removeFromCart(cartItemId);
-                    } else {
-                        localStorage.setItem('cart', JSON.stringify(cart));
+                } else {
+                    localStorage.setItem('cart', JSON.stringify(cart));
                         updateCartCount();
-                        renderCart();
+                    renderCart();
                     }
                 }
             }
@@ -516,11 +516,11 @@
                 const paymentData = await paymentResponse.json();
 
                 // Initialize Paystack
-                const handler = PaystackPop.setup({
-                    key: PAYSTACK_PUBLIC_KEY,
-                    email: orderData.email,
-                    amount: orderData.total * 100, // Convert to kobo
-                    currency: 'NGN',
+            const handler = PaystackPop.setup({
+                key: PAYSTACK_PUBLIC_KEY,
+                email: orderData.email,
+                amount: orderData.total * 100, // Convert to kobo
+                currency: 'NGN',
                     ref: paymentData.reference,
                     callback: async function(response) {
                         // Verify payment
@@ -536,14 +536,14 @@
                         });
 
                         if (verifyResponse.ok) {
-                            // Payment successful
-                            console.log('Payment successful!', response);
-                            
-                            // Show success message
-                            document.getElementById('order-success').classList.add('active');
-                            document.getElementById('modal-overlay').classList.add('active');
-                            
-                            // Clear cart
+                    // Payment successful
+                    console.log('Payment successful!', response);
+                    
+                    // Show success message
+                    document.getElementById('order-success').classList.add('active');
+                    document.getElementById('modal-overlay').classList.add('active');
+                    
+                    // Clear cart
                             await fetch(API_ENDPOINTS.CART + 'clear/', {
                                 method: 'POST',
                                 headers: {
@@ -551,20 +551,20 @@
                                 }
                             });
                             
-                            cart = [];
-                            localStorage.removeItem('cart');
-                            updateCartCount();
+                    cart = [];
+                    localStorage.removeItem('cart');
+                    updateCartCount();
                         } else {
                             alert('Payment verification failed. Please contact support.');
                         }
-                    },
-                    onClose: function() {
-                        // User closed the payment window
-                        alert('Payment was not completed. Please try again.');
-                    }
-                });
-                
-                handler.openIframe();
+                },
+                onClose: function() {
+                    // User closed the payment window
+                    alert('Payment was not completed. Please try again.');
+                }
+            });
+            
+            handler.openIframe();
             } catch (error) {
                 console.error('Payment error:', error);
                 alert('Payment initialization failed. Please try again.');
