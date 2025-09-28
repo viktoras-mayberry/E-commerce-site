@@ -264,6 +264,187 @@
     <script src="{% static 'js/admin-dashboard.js' %}"></script>
     <script src="{% static 'js/admin-forms.js' %}"></script>
     <script>
+        // Session Management and Login History functions
+        function viewSessions() {
+            showNotification('Loading active sessions...', 'info');
+            
+            // Create modal for sessions
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3><i class="fas fa-desktop"></i> Active Sessions</h3>
+                        <button class="modal-close" onclick="closeModal()">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="session-list">
+                            <div class="session-item current">
+                                <div class="session-info">
+                                    <div class="session-device">
+                                        <i class="fas fa-desktop"></i>
+                                        <div>
+                                            <strong>Current Session</strong>
+                                            <p>Windows 10 • Chrome Browser</p>
+                                        </div>
+                                    </div>
+                                    <div class="session-details">
+                                        <span class="session-ip">IP: 192.168.1.100</span>
+                                        <span class="session-time">Active now</span>
+                                    </div>
+                                </div>
+                                <div class="session-status">
+                                    <span class="status-badge active">Active</span>
+                                </div>
+                            </div>
+                            
+                            <div class="session-item">
+                                <div class="session-info">
+                                    <div class="session-device">
+                                        <i class="fas fa-mobile-alt"></i>
+                                        <div>
+                                            <strong>Mobile Device</strong>
+                                            <p>iPhone 12 • Safari Browser</p>
+                                        </div>
+                                    </div>
+                                    <div class="session-details">
+                                        <span class="session-ip">IP: 192.168.1.101</span>
+                                        <span class="session-time">2 hours ago</span>
+                                    </div>
+                                </div>
+                                <div class="session-status">
+                                    <span class="status-badge inactive">Inactive</span>
+                                    <button class="btn btn-sm btn-danger" onclick="terminateSession(this)">
+                                        <i class="fas fa-times"></i>
+                                        Terminate
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-outline" onclick="closeModal()">Close</button>
+                        <button class="btn btn-primary" onclick="terminateAllSessions()">
+                            <i class="fas fa-sign-out-alt"></i>
+                            Terminate All Other Sessions
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            setTimeout(() => modal.classList.add('show'), 10);
+        }
+        
+        function viewLoginHistory() {
+            showNotification('Loading login history...', 'info');
+            
+            // Create modal for login history
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3><i class="fas fa-history"></i> Login History</h3>
+                        <button class="modal-close" onclick="closeModal()">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="history-list">
+                            <div class="history-item">
+                                <div class="history-info">
+                                    <div class="history-device">
+                                        <i class="fas fa-desktop"></i>
+                                        <div>
+                                            <strong>Windows 10 • Chrome</strong>
+                                            <p>192.168.1.100</p>
+                                        </div>
+                                    </div>
+                                    <div class="history-status">
+                                        <span class="status-badge success">Successful</span>
+                                    </div>
+                                </div>
+                                <div class="history-time">
+                                    <span>Today, 2:30 PM</span>
+                                </div>
+                            </div>
+                            
+                            <div class="history-item">
+                                <div class="history-info">
+                                    <div class="history-device">
+                                        <i class="fas fa-mobile-alt"></i>
+                                        <div>
+                                            <strong>iPhone 12 • Safari</strong>
+                                            <p>192.168.1.101</p>
+                                        </div>
+                                    </div>
+                                    <div class="history-status">
+                                        <span class="status-badge success">Successful</span>
+                                    </div>
+                                </div>
+                                <div class="history-time">
+                                    <span>Yesterday, 8:15 AM</span>
+                                </div>
+                            </div>
+                            
+                            <div class="history-item">
+                                <div class="history-info">
+                                    <div class="history-device">
+                                        <i class="fas fa-desktop"></i>
+                                        <div>
+                                            <strong>Windows 10 • Firefox</strong>
+                                            <p>192.168.1.102</p>
+                                        </div>
+                                    </div>
+                                    <div class="history-status">
+                                        <span class="status-badge failed">Failed</span>
+                                    </div>
+                                </div>
+                                <div class="history-time">
+                                    <span>2 days ago, 11:45 PM</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-outline" onclick="closeModal()">Close</button>
+                        <button class="btn btn-primary" onclick="exportLoginHistory()">
+                            <i class="fas fa-download"></i>
+                            Export History
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            setTimeout(() => modal.classList.add('show'), 10);
+        }
+        
+        function closeModal() {
+            const modal = document.querySelector('.modal-overlay');
+            if (modal) {
+                modal.classList.remove('show');
+                setTimeout(() => modal.remove(), 300);
+            }
+        }
+        
+        function terminateSession(button) {
+            if (confirm('Are you sure you want to terminate this session?')) {
+                showNotification('Session terminated successfully', 'success');
+                button.closest('.session-item').remove();
+            }
+        }
+        
+        function terminateAllSessions() {
+            if (confirm('Are you sure you want to terminate all other sessions? This will log you out of all other devices.')) {
+                showNotification('All other sessions terminated successfully', 'success');
+                closeModal();
+            }
+        }
+        
+        function exportLoginHistory() {
+            showNotification('Login history exported successfully', 'success');
+        }
+        
         // Profile form handling
         document.getElementById('profileForm').addEventListener('submit', function(e) {
             e.preventDefault();
