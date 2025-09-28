@@ -31,23 +31,83 @@ function setupEventListeners() {
         });
     }
     
-    // User menu dropdown
+    // User menu dropdown with enhanced functionality
     const userMenu = document.querySelector('.user-menu');
     if (userMenu) {
+        let isDropdownOpen = false;
+        
         userMenu.addEventListener('click', function(e) {
             e.stopPropagation();
             const dropdown = this.querySelector('.dropdown-menu');
-            dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+            
+            if (isDropdownOpen) {
+                closeDropdown();
+            } else {
+                openDropdown();
+            }
+        });
+        
+        function openDropdown() {
+            const dropdown = userMenu.querySelector('.dropdown-menu');
+            dropdown.style.display = 'block';
+            dropdown.style.opacity = '0';
+            dropdown.style.transform = 'translateY(-15px) scale(0.95)';
+            
+            // Force reflow
+            dropdown.offsetHeight;
+            
+            dropdown.style.opacity = '1';
+            dropdown.style.transform = 'translateY(0) scale(1)';
+            isDropdownOpen = true;
+            
+            // Add active class for styling
+            userMenu.classList.add('active');
+        }
+        
+        function closeDropdown() {
+            const dropdown = userMenu.querySelector('.dropdown-menu');
+            dropdown.style.opacity = '0';
+            dropdown.style.transform = 'translateY(-15px) scale(0.95)';
+            
+            setTimeout(() => {
+                dropdown.style.display = 'none';
+            }, 300);
+            
+            isDropdownOpen = false;
+            userMenu.classList.remove('active');
+        }
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!userMenu.contains(e.target)) {
+                closeDropdown();
+            }
+        });
+        
+        // Handle dropdown item clicks
+        const dropdownItems = userMenu.querySelectorAll('.dropdown-item');
+        dropdownItems.forEach(item => {
+            item.addEventListener('click', function(e) {
+                e.preventDefault();
+                const action = this.getAttribute('href') || this.textContent.trim();
+                
+                switch(action) {
+                    case '#':
+                    case 'Profile':
+                        handleProfileClick();
+                        break;
+                    case 'Settings':
+                        handleSettingsClick();
+                        break;
+                    case 'Logout':
+                        handleLogoutClick();
+                        break;
+                }
+                
+                closeDropdown();
+            });
         });
     }
-    
-    // Close dropdown when clicking outside
-    document.addEventListener('click', function() {
-        const dropdown = document.querySelector('.dropdown-menu');
-        if (dropdown) {
-            dropdown.style.display = 'none';
-        }
-    });
     
     // Navigation links
     const navLinks = document.querySelectorAll('.nav-link');
@@ -441,6 +501,49 @@ function showNotification(message, type = 'info') {
     }, 3000);
 }
 
+// User menu dropdown handlers
+function handleProfileClick() {
+    console.log('Profile clicked');
+    // Show profile modal or navigate to profile page
+    showNotification('Profile feature coming soon!', 'info');
+}
+
+function handleSettingsClick() {
+    console.log('Settings clicked');
+    // Navigate to settings page
+    window.location.href = '/admin/settings/';
+}
+
+function handleLogoutClick() {
+    console.log('Logout clicked');
+    // Show confirmation dialog
+    if (confirm('Are you sure you want to logout?')) {
+        // Perform logout
+        fetch('/api/auth/logout/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCSRFToken(),
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('Logged out successfully!', 'success');
+                setTimeout(() => {
+                    window.location.href = '/admin-login/';
+                }, 1000);
+            } else {
+                showNotification('Logout failed. Please try again.', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Logout error:', error);
+            showNotification('Logout failed. Please try again.', 'error');
+        });
+    }
+}
+
 // Export functions for global access
 window.adminDashboard = {
     addProduct,
@@ -448,5 +551,8 @@ window.adminDashboard = {
     manageInventory,
     viewAnalytics,
     logout,
-    showNotification
+    showNotification,
+    handleProfileClick,
+    handleSettingsClick,
+    handleLogoutClick
 };
