@@ -160,7 +160,7 @@ def product_stats(request):
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def global_search(request):
-    """Global search across all products"""
+    """Global search across all products with enhanced partial matching"""
     query = request.GET.get('q', '').strip()
     
     if not query:
@@ -171,14 +171,33 @@ def global_search(request):
             'message': 'Please enter a search term'
         })
     
-    # Search across product name, description, and category
+    # Enhanced partial matching with multiple search strategies
+    search_terms = [query]
+    
+    # Add variations of the search term for better matching
+    if len(query) > 2:
+        # Add singular/plural variations
+        if query.endswith('s'):
+            search_terms.append(query[:-1])  # Remove 's' for singular
+        else:
+            search_terms.append(query + 's')  # Add 's' for plural
+    
+    # Create comprehensive search query
+    search_query = Q()
+    for term in search_terms:
+        search_query |= (
+            Q(name__icontains=term) |
+            Q(description__icontains=term) |
+            Q(category__name__icontains=term) |
+            Q(sku__icontains=term) |
+            Q(tags__icontains=term) if hasattr(Product, 'tags') else Q()
+        )
+    
+    # Search across product name, description, category, and SKU
     products = Product.objects.filter(
-        Q(name__icontains=query) |
-        Q(description__icontains=query) |
-        Q(category__name__icontains=query) |
-        Q(sku__icontains=query),
+        search_query,
         is_active=True
-    ).distinct().order_by('-created_at')
+    ).distinct().order_by('-is_featured', '-is_bestseller', '-created_at')
     
     # Serialize the results
     serializer = ProductListSerializer(products, many=True)
