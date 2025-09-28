@@ -1421,28 +1421,212 @@
             const searchBtn = document.querySelector('.search-btn');
             
             function performSearch() {
-                const searchTerm = searchInput.value.toLowerCase().trim();
+                const searchTerm = searchInput.value.trim();
                 
                 if (searchTerm === '') {
+                    alert('Please enter a search term');
                     return;
                 }
                 
-                // Check if search term matches jewelry
-                if (searchTerm.includes('jewelry') || searchTerm.includes('necklace') || 
-                    searchTerm.includes('earring') || searchTerm.includes('ring') || 
-                    searchTerm.includes('bracelet') || searchTerm.includes('jewel')) {
-                    window.location.href = "{% url 'jewelry' %}";
-                }
-                // Check if search term matches home decor
-                else if (searchTerm.includes('home') || searchTerm.includes('decor') || 
-                         searchTerm.includes('furniture') || searchTerm.includes('tableware') || 
-                         searchTerm.includes('lighting') || searchTerm.includes('textile')) {
-                    window.location.href = "{% url 'home_decor' %}";
-                }
-                // Default to jewelry page
-                else {
-                    window.location.href = "{% url 'jewelry' %}";
-                }
+                // Show loading state
+                searchBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                searchBtn.disabled = true;
+                
+                // Perform global search
+                fetch(`/api/products/search/?q=${encodeURIComponent(searchTerm)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.total > 0) {
+                            // Create search results modal
+                            showSearchResults(data.results, data.query, data.total);
+                        } else {
+                            alert(`No products found for "${searchTerm}". Try different keywords.`);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Search error:', error);
+                        alert('Search failed. Please try again.');
+                    })
+                    .finally(() => {
+                        // Reset button state
+                        searchBtn.innerHTML = '<i class="fas fa-search"></i>';
+                        searchBtn.disabled = false;
+                    });
+            }
+            
+            function showSearchResults(results, query, total) {
+                // Create modal for search results
+                const modal = document.createElement('div');
+                modal.className = 'search-results-modal';
+                modal.innerHTML = `
+                    <div class="search-modal-content">
+                        <div class="search-modal-header">
+                            <h3>Search Results for "${query}"</h3>
+                            <button class="close-search-modal">&times;</button>
+                        </div>
+                        <div class="search-modal-body">
+                            <p class="search-summary">Found ${total} result${total !== 1 ? 's' : ''}</p>
+                            <div class="search-results-grid">
+                                ${results.map(product => `
+                                    <div class="search-result-item">
+                                        <div class="result-image">
+                                            <img src="${product.image || 'https://via.placeholder.com/150'}" alt="${product.name}">
+                                        </div>
+                                        <div class="result-info">
+                                            <h4>${product.name}</h4>
+                                            <p class="result-category">${product.category}</p>
+                                            <p class="result-price">₦${product.price.toLocaleString()}</p>
+                                            <p class="result-description">${product.description ? product.description.substring(0, 100) + '...' : ''}</p>
+                                            <button class="btn btn-primary view-product" data-product-id="${product.id}">
+                                                View Product
+                                            </button>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                // Add modal styles
+                const style = document.createElement('style');
+                style.textContent = `
+                    .search-results-modal {
+                        position: fixed;
+                        top: 0;
+                        left: 0;
+                        width: 100%;
+                        height: 100%;
+                        background: rgba(0, 0, 0, 0.5);
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        z-index: 10000;
+                    }
+                    .search-modal-content {
+                        background: white;
+                        border-radius: 1rem;
+                        max-width: 800px;
+                        max-height: 80vh;
+                        overflow-y: auto;
+                        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+                    }
+                    .search-modal-header {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        padding: 1.5rem;
+                        border-bottom: 1px solid #e9ecef;
+                    }
+                    .search-modal-header h3 {
+                        margin: 0;
+                        color: var(--primary);
+                    }
+                    .close-search-modal {
+                        background: none;
+                        border: none;
+                        font-size: 1.5rem;
+                        cursor: pointer;
+                        color: #6c757d;
+                    }
+                    .search-modal-body {
+                        padding: 1.5rem;
+                    }
+                    .search-summary {
+                        color: #6c757d;
+                        margin-bottom: 1rem;
+                    }
+                    .search-results-grid {
+                        display: grid;
+                        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+                        gap: 1rem;
+                    }
+                    .search-result-item {
+                        display: flex;
+                        border: 1px solid #e9ecef;
+                        border-radius: 0.5rem;
+                        padding: 1rem;
+                        transition: all 0.3s ease;
+                    }
+                    .search-result-item:hover {
+                        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+                        transform: translateY(-2px);
+                    }
+                    .result-image {
+                        width: 80px;
+                        height: 80px;
+                        margin-right: 1rem;
+                        flex-shrink: 0;
+                    }
+                    .result-image img {
+                        width: 100%;
+                        height: 100%;
+                        object-fit: cover;
+                        border-radius: 0.5rem;
+                    }
+                    .result-info {
+                        flex: 1;
+                    }
+                    .result-info h4 {
+                        margin: 0 0 0.5rem 0;
+                        color: var(--primary);
+                        font-size: 1.1rem;
+                    }
+                    .result-category {
+                        color: var(--accent);
+                        font-size: 0.9rem;
+                        margin: 0 0 0.5rem 0;
+                    }
+                    .result-price {
+                        color: var(--primary);
+                        font-weight: 600;
+                        margin: 0 0 0.5rem 0;
+                    }
+                    .result-description {
+                        color: #6c757d;
+                        font-size: 0.9rem;
+                        margin: 0 0 1rem 0;
+                        line-height: 1.4;
+                    }
+                    .view-product {
+                        padding: 0.5rem 1rem;
+                        font-size: 0.9rem;
+                    }
+                `;
+                document.head.appendChild(style);
+                
+                document.body.appendChild(modal);
+                
+                // Add event listeners
+                modal.querySelector('.close-search-modal').addEventListener('click', () => {
+                    modal.remove();
+                    style.remove();
+                });
+                
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) {
+                        modal.remove();
+                        style.remove();
+                    }
+                });
+                
+                // Add click handlers for view product buttons
+                modal.querySelectorAll('.view-product').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const productId = btn.dataset.productId;
+                        // Route to appropriate page based on product category
+                        const resultItem = btn.closest('.search-result-item');
+                        const category = resultItem.querySelector('.result-category').textContent.toLowerCase();
+                        
+                        if (category.includes('jewelry') || category.includes('necklace') || 
+                            category.includes('earring') || category.includes('ring') || 
+                            category.includes('bracelet')) {
+                            window.location.href = "{% url 'jewelry' %}";
+                        } else {
+                            window.location.href = "{% url 'home_decor' %}";
+                        }
+                    });
+                });
             }
             
             // Search button click

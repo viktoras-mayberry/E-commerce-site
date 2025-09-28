@@ -704,6 +704,12 @@
                 const selectedStockStatus = Array.from(document.querySelectorAll('#stock-status-filter input:checked')).map(input => input.id);
                 const searchTerm = document.getElementById('search-input').value.toLowerCase();
                 
+                // If search term is more than 2 characters, use global search
+                if (searchTerm.length > 2) {
+                    performGlobalSearch(searchTerm);
+                    return;
+                }
+                
                 filteredProducts = allProducts.filter(product => {
                     // Category filter
                     const categoryMatch = selectedCategories.length === 0 || selectedCategories.includes(product.category);
@@ -722,6 +728,113 @@
                 currentPage = 1;
                 renderProducts();
             }
+            
+            // Global search functionality
+            function performGlobalSearch(searchTerm) {
+                // Show loading state
+                const searchBtn = document.querySelector('.search-btn');
+                const originalContent = searchBtn.innerHTML;
+                searchBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                searchBtn.disabled = true;
+                
+                fetch(`/api/products/search/?q=${encodeURIComponent(searchTerm)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.total > 0) {
+                            // Filter results to only show home decor products
+                            const homeDecorResults = data.results.filter(product => 
+                                product.category.toLowerCase().includes('home') ||
+                                product.category.toLowerCase().includes('decor') ||
+                                product.category.toLowerCase().includes('tableware') ||
+                                product.category.toLowerCase().includes('lighting') ||
+                                product.category.toLowerCase().includes('textile') ||
+                                product.category.toLowerCase().includes('furniture')
+                            );
+                            
+                            if (homeDecorResults.length > 0) {
+                                // Update the products display with search results
+                                filteredProducts = homeDecorResults;
+                                currentPage = 1;
+                                renderProducts();
+                                
+                                // Show search results summary
+                                showSearchSummary(homeDecorResults.length, searchTerm);
+                            } else {
+                                // No home decor results found
+                                showNoResultsMessage(searchTerm);
+                            }
+                        } else {
+                            showNoResultsMessage(searchTerm);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Global search error:', error);
+                        // Fallback to local search
+                        filterProducts();
+                    })
+                    .finally(() => {
+                        // Reset button state
+                        searchBtn.innerHTML = originalContent;
+                        searchBtn.disabled = false;
+                    });
+            }
+            
+            // Show search results summary
+            function showSearchSummary(count, searchTerm) {
+                const existingSummary = document.querySelector('.search-summary');
+                if (existingSummary) {
+                    existingSummary.remove();
+                }
+                
+                const summary = document.createElement('div');
+                summary.className = 'search-summary';
+                summary.innerHTML = `
+                    <div style="background: #e3f2fd; border: 1px solid #2196f3; border-radius: 0.5rem; padding: 1rem; margin: 1rem 0; color: #1976d2;">
+                        <i class="fas fa-search"></i> Found ${count} result${count !== 1 ? 's' : ''} for "${searchTerm}"
+                        <button onclick="clearSearch()" style="float: right; background: none; border: none; color: #1976d2; cursor: pointer;">
+                            <i class="fas fa-times"></i> Clear
+                        </button>
+                    </div>
+                `;
+                
+                const productsContainer = document.querySelector('.products-container');
+                productsContainer.insertBefore(summary, productsContainer.firstChild);
+            }
+            
+            // Show no results message
+            function showNoResultsMessage(searchTerm) {
+                const existingSummary = document.querySelector('.search-summary');
+                if (existingSummary) {
+                    existingSummary.remove();
+                }
+                
+                const summary = document.createElement('div');
+                summary.className = 'search-summary';
+                summary.innerHTML = `
+                    <div style="background: #ffebee; border: 1px solid #f44336; border-radius: 0.5rem; padding: 1rem; margin: 1rem 0; color: #d32f2f;">
+                        <i class="fas fa-exclamation-triangle"></i> No home decor products found for "${searchTerm}"
+                        <button onclick="clearSearch()" style="float: right; background: none; border: none; color: #d32f2f; cursor: pointer;">
+                            <i class="fas fa-times"></i> Clear
+                        </button>
+                    </div>
+                `;
+                
+                const productsContainer = document.querySelector('.products-container');
+                productsContainer.insertBefore(summary, productsContainer.firstChild);
+            }
+            
+            // Clear search function
+            window.clearSearch = function() {
+                document.getElementById('search-input').value = '';
+                filteredProducts = allProducts;
+                currentPage = 1;
+                renderProducts();
+                
+                const existingSummary = document.querySelector('.search-summary');
+                if (existingSummary) {
+                    existingSummary.remove();
+                }
+            };
             
             // Sort functionality
             function sortProducts(sortOption) {

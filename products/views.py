@@ -155,3 +155,37 @@ def product_stats(request):
         'bestsellers': bestsellers,
         'new_arrivals': new_arrivals
     })
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def global_search(request):
+    """Global search across all products"""
+    query = request.GET.get('q', '').strip()
+    
+    if not query:
+        return Response({
+            'results': [],
+            'total': 0,
+            'query': '',
+            'message': 'Please enter a search term'
+        })
+    
+    # Search across product name, description, and category
+    products = Product.objects.filter(
+        Q(name__icontains=query) |
+        Q(description__icontains=query) |
+        Q(category__name__icontains=query) |
+        Q(sku__icontains=query),
+        is_active=True
+    ).distinct().order_by('-created_at')
+    
+    # Serialize the results
+    serializer = ProductListSerializer(products, many=True)
+    
+    return Response({
+        'results': serializer.data,
+        'total': products.count(),
+        'query': query,
+        'message': f'Found {products.count()} results for "{query}"'
+    })
