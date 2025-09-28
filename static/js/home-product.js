@@ -912,4 +912,41 @@
             
             // Start the page initialization
             initPage();
+            
+            // Check for product highlighting from search
+            const urlParams = new URLSearchParams(window.location.search);
+            const highlightId = urlParams.get('highlight');
+            if (highlightId) {
+                setTimeout(() => highlightProduct(highlightId), 1000);
+            }
         });
+        
+        // Highlight specific product
+        function highlightProduct(productId) {
+            const productElement = document.querySelector(`[data-product-id="${productId}"]`);
+            if (productElement) {
+                // Scroll to product
+                productElement.scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'center' 
+                });
+                
+                // Add highlight animation
+                productElement.style.transition = 'all 0.5s ease';
+                productElement.style.transform = 'scale(1.05)';
+                productElement.style.boxShadow = '0 0 20px rgba(196, 91, 60, 0.5)';
+                productElement.style.border = '2px solid #c45b3c';
+                
+                // Remove highlight after 3 seconds
+                setTimeout(() => {
+                    productElement.style.transform = 'scale(1)';
+                    productElement.style.boxShadow = '';
+                    productElement.style.border = '';
+                }, 3000);
+                
+                // Remove highlight parameter from URL
+                const url = new URL(window.location);
+                url.searchParams.delete('highlight');
+                window.history.replaceState({}, '', url);
+            }
+        }
