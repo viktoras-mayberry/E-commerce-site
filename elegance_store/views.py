@@ -27,21 +27,31 @@ def home(request):
 
 def jewelry_page(request):
     """Serve the jewelry page with context data"""
-    # Get jewelry products (controlled by admin)
-    jewelry_products = Product.objects.filter(
-        category__name__icontains='jewelry', 
-        is_active=True
-    ).order_by('-created_at')[:20]
-    
-    # Get categories
-    categories = Category.objects.filter(is_active=True)
-    
-    context = {
-        'products': jewelry_products,
-        'categories': categories,
-        'current_category': 'Jewelry',
-    }
-    return render(request, 'jewelry-product.html', context)
+    try:
+        # Get jewelry products (controlled by admin)
+        jewelry_products = Product.objects.filter(
+            category__name__icontains='jewelry', 
+            is_active=True
+        ).order_by('-created_at')[:20]
+        
+        # Get categories
+        categories = Category.objects.filter(is_active=True)
+        
+        context = {
+            'products': jewelry_products,
+            'categories': categories,
+            'current_category': 'Jewelry',
+        }
+        
+        print(f"Jewelry page - Products found: {jewelry_products.count()}")
+        print(f"Jewelry page - Categories found: {categories.count()}")
+        
+        return render(request, 'jewelry-product.html', context)
+    except Exception as e:
+        print(f"Error in jewelry_page: {e}")
+        # Return a simple response if there's an error
+        from django.http import HttpResponse
+        return HttpResponse(f"Error loading jewelry page: {e}")
 
 def home_decor_page(request):
     """Serve the home decor page with context data"""
