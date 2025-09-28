@@ -500,39 +500,95 @@ function handleLogoutClick() {
     if (window.logoutInProgress) {
         return;
     }
+    
+    // Show custom logout confirmation modal
+    showLogoutConfirmation();
+}
+
+function showLogoutConfirmation() {
+    // Create custom logout confirmation modal
+    const modal = document.createElement('div');
+    modal.className = 'logout-modal-overlay';
+    modal.innerHTML = `
+        <div class="logout-modal-content">
+            <div class="logout-modal-header">
+                <div class="logout-icon">
+                    <i class="fas fa-sign-out-alt"></i>
+                </div>
+                <h3>Confirm Logout</h3>
+            </div>
+            <div class="logout-modal-body">
+                <p>Are you sure you want to logout?</p>
+                <p class="logout-warning">You will need to login again to access the admin panel.</p>
+            </div>
+            <div class="logout-modal-footer">
+                <button class="btn btn-outline" onclick="cancelLogout()">
+                    <i class="fas fa-times"></i>
+                    Cancel
+                </button>
+                <button class="btn btn-danger" onclick="confirmLogout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Logout
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    setTimeout(() => {
+        modal.classList.add('show');
+        // Add click outside to close
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                cancelLogout();
+            }
+        });
+    }, 10);
+}
+
+function cancelLogout() {
+    const modal = document.querySelector('.logout-modal-overlay');
+    if (modal) {
+        modal.classList.remove('show');
+        setTimeout(() => modal.remove(), 300);
+    }
+}
+
+function confirmLogout() {
     window.logoutInProgress = true;
     
-    // Show confirmation dialog
-    if (confirm('Are you sure you want to logout?')) {
-        // Perform logout
-        fetch('/api/auth/logout/', {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': getCSRFToken(),
-                'Content-Type': 'application/json',
-            },
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showNotification('Logged out successfully!', 'success');
-                setTimeout(() => {
-                    window.location.href = '/admin-login/';
-                }, 1000);
-            } else {
-                showNotification('Logout failed. Please try again.', 'error');
-                window.logoutInProgress = false; // Reset flag on failure
-            }
-        })
-        .catch(error => {
-            console.error('Logout error:', error);
-            showNotification('Logout failed. Please try again.', 'error');
-            window.logoutInProgress = false; // Reset flag on error
-        });
-    } else {
-        // User cancelled logout, reset the flag
-        window.logoutInProgress = false;
+    // Close the modal first
+    const modal = document.querySelector('.logout-modal-overlay');
+    if (modal) {
+        modal.classList.remove('show');
+        setTimeout(() => modal.remove(), 300);
     }
+    
+    // Perform logout
+    fetch('/api/auth/logout/', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCSRFToken(),
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Logged out successfully!', 'success');
+            setTimeout(() => {
+                window.location.href = '/admin-login/';
+            }, 1000);
+        } else {
+            showNotification('Logout failed. Please try again.', 'error');
+            window.logoutInProgress = false; // Reset flag on failure
+        }
+    })
+    .catch(error => {
+        console.error('Logout error:', error);
+        showNotification('Logout failed. Please try again.', 'error');
+        window.logoutInProgress = false; // Reset flag on error
+    });
 }
 
 // Export functions for global access
