@@ -34,15 +34,16 @@ def login_view(request):
 
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def logout_view(request):
     """Logout endpoint"""
     try:
-        request.user.auth_token.delete()
-    except:
-        pass
-    logout(request)
-    return Response({'message': 'Logout successful'})
+        # Use Django's built-in logout for session-based authentication
+        from django.contrib.auth import logout
+        logout(request)
+        return Response({'success': True, 'message': 'Logout successful'})
+    except Exception as e:
+        return Response({'success': True, 'message': 'Logout successful'})
 
 
 @api_view(['GET'])
