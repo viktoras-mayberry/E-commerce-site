@@ -447,3 +447,11 @@ def api_dashboard_analytics(request):
     }
     
     return JsonResponse(data)
+
+@admin_required
+def profile_management(request):
+    """Profile management page"""
+    context = {
+        'admin_user': request.user,
+    }
+    return render(request, 'admin/profile.html', context)

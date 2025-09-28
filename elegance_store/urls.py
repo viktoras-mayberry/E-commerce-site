@@ -30,10 +30,11 @@ urlpatterns = [
     path('admin/inventory/', admin_views.inventory_management, name='admin_inventory'),
     path('admin/inventory/update/<int:product_id>/', admin_views.update_stock, name='admin_update_stock'),
     path('admin/analytics/', admin_views.analytics_dashboard, name='admin_analytics'),
-    path('admin/settings/', admin_views.settings_management, name='admin_settings'),
-    
-    # Django Admin (must come after custom admin routes)
-    path('admin/', admin.site.urls),
+           path('admin/settings/', admin_views.settings_management, name='admin_settings'),
+           path('admin/profile/', admin_views.profile_management, name='admin_profile'),
+           
+           # Django Admin (must come after custom admin routes)
+           path('admin/', admin.site.urls),
     
     # API endpoints for AJAX
     path('api/orders/recent/', admin_views.api_recent_orders, name='api_recent_orders'),

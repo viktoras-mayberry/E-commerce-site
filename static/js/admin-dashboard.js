@@ -88,11 +88,17 @@ function setupEventListeners() {
         const dropdownItems = userMenu.querySelectorAll('.dropdown-item');
         dropdownItems.forEach(item => {
             item.addEventListener('click', function(e) {
-                e.preventDefault();
-                const action = this.getAttribute('href') || this.textContent.trim();
+                const href = this.getAttribute('href');
+                const text = this.textContent.trim();
                 
-                switch(action) {
-                    case '#':
+                // If it has a valid href, let it navigate normally
+                if (href && href !== '#') {
+                    return; // Allow normal navigation
+                }
+                
+                e.preventDefault();
+                
+                switch(text) {
                     case 'Profile':
                         handleProfileClick();
                         break;
@@ -504,8 +510,8 @@ function showNotification(message, type = 'info') {
 // User menu dropdown handlers
 function handleProfileClick() {
     console.log('Profile clicked');
-    // Show profile modal or navigate to profile page
-    showNotification('Profile feature coming soon!', 'info');
+    // Navigate to profile page
+    window.location.href = '/admin/profile/';
 }
 
 function handleSettingsClick() {

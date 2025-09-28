@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Profile - Elegance Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/admin-dashboard.css' %}">
+    <link rel="stylesheet" href="{% static 'css/admin-forms.css' %}">
+</head>
+<body>
+    <div class="admin-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-gem"></i>
+                    <span>Elegance Admin</span>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <a href="{% url 'dashboard' %}" class="nav-link">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{% url 'admin_products' %}" class="nav-link">
+                            <i class="fas fa-box"></i>
+                            <span>Products</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{% url 'admin_orders' %}" class="nav-link">
+                            <i class="fas fa-shopping-cart"></i>
+                            <span>Orders</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{% url 'admin_inventory' %}" class="nav-link">
+                            <i class="fas fa-warehouse"></i>
+                            <span>Inventory</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{% url 'admin_analytics' %}" class="nav-link">
+                            <i class="fas fa-chart-line"></i>
+                            <span>Analytics</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{% url 'admin_settings' %}" class="nav-link">
+                            <i class="fas fa-cog"></i>
+                            <span>Settings</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-left">
+                    <button class="sidebar-toggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div class="breadcrumb">
+                        <a href="{% url 'dashboard' %}" class="breadcrumb-link">
+                            <i class="fas fa-arrow-left"></i>
+                            Back to Dashboard
+                        </a>
+                        <i class="fas fa-chevron-right"></i>
+                        <span>Admin Profile</span>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <div class="user-menu">
+                        <div class="user-info">
+                            <span class="user-name">{{ admin_user.first_name }} {{ admin_user.last_name }}</span>
+                            <span class="user-role">Administrator</span>
+                        </div>
+                        <div class="user-avatar">
+                            <i class="fas fa-user-circle"></i>
+                        </div>
+                        <div class="dropdown-menu">
+                            <a href="{% url 'admin_profile' %}" class="dropdown-item">
+                                <i class="fas fa-user"></i>
+                                Profile
+                            </a>
+                            <a href="{% url 'admin_settings' %}" class="dropdown-item">
+                                <i class="fas fa-cog"></i>
+                                Settings
+                            </a>
+                            <div class="dropdown-divider"></div>
+                            <a href="{% url 'logout' %}" class="dropdown-item logout">
+                                <i class="fas fa-sign-out-alt"></i>
+                                Logout
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Profile Content -->
+            <div class="dashboard-content">
+                <!-- Profile Information -->
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <h3>Profile Information</h3>
+                        <p>Manage your admin account details</p>
+                    </div>
+                    <div class="card-content">
+                        <form method="POST" class="profile-form" id="profileForm">
+                            {% csrf_token %}
+                            
+                            <!-- Personal Information -->
+                            <div class="form-section">
+                                <h4>Personal Information</h4>
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label for="first_name" class="form-label">First Name *</label>
+                                        <input type="text" id="first_name" name="first_name" class="form-input" value="{{ admin_user.first_name }}" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="last_name" class="form-label">Last Name *</label>
+                                        <input type="text" id="last_name" name="last_name" class="form-input" value="{{ admin_user.last_name }}" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="email" class="form-label">Email Address *</label>
+                                        <input type="email" id="email" name="email" class="form-input" value="{{ admin_user.email }}" required readonly>
+                                        <small class="form-help">Email cannot be changed for security reasons</small>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="phone" class="form-label">Phone Number</label>
+                                        <input type="tel" id="phone" name="phone" class="form-input" value="{{ admin_user.phone|default:'' }}">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Security Settings -->
+                            <div class="form-section">
+                                <h4>Security Settings</h4>
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label for="current_password" class="form-label">Current Password</label>
+                                        <div class="password-input">
+                                            <input type="password" id="current_password" name="current_password" class="form-input">
+                                            <button type="button" class="password-toggle" onclick="togglePassword('current_password')">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="new_password" class="form-label">New Password</label>
+                                        <div class="password-input">
+                                            <input type="password" id="new_password" name="new_password" class="form-input">
+                                            <button type="button" class="password-toggle" onclick="togglePassword('new_password')">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="confirm_password" class="form-label">Confirm New Password</label>
+                                        <div class="password-input">
+                                            <input type="password" id="confirm_password" name="confirm_password" class="form-input">
+                                            <button type="button" class="password-toggle" onclick="togglePassword('confirm_password')">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Account Status -->
+                            <div class="form-section">
+                                <h4>Account Status</h4>
+                                <div class="status-info">
+                                    <div class="status-item">
+                                        <span class="status-label">Account Type:</span>
+                                        <span class="status-value admin-badge">Administrator</span>
+                                    </div>
+                                    <div class="status-item">
+                                        <span class="status-label">Last Login:</span>
+                                        <span class="status-value">{{ admin_user.last_login|date:"F d, Y H:i"|default:"Never" }}</span>
+                                    </div>
+                                    <div class="status-item">
+                                        <span class="status-label">Account Created:</span>
+                                        <span class="status-value">{{ admin_user.date_joined|date:"F d, Y" }}</span>
+                                    </div>
+                                    <div class="status-item">
+                                        <span class="status-label">Status:</span>
+                                        <span class="status-value status-active">Active</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Form Actions -->
+                            <div class="form-actions">
+                                <button type="button" class="btn btn-outline" onclick="resetForm()">
+                                    <i class="fas fa-undo"></i>
+                                    Reset
+                                </button>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i>
+                                    Update Profile
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Security Actions -->
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <h3>Security Actions</h3>
+                        <p>Manage your account security</p>
+                    </div>
+                    <div class="card-content">
+                        <div class="security-actions">
+                            <div class="security-item">
+                                <div class="security-info">
+                                    <h4>Change Password</h4>
+                                    <p>Update your account password for better security</p>
+                                </div>
+                                <button class="btn btn-outline" onclick="showPasswordForm()">
+                                    <i class="fas fa-key"></i>
+                                    Change Password
+                                </button>
+                            </div>
+                            <div class="security-item">
+                                <div class="security-info">
+                                    <h4>Session Management</h4>
+                                    <p>View and manage your active sessions</p>
+                                </div>
+                                <button class="btn btn-outline" onclick="viewSessions()">
+                                    <i class="fas fa-desktop"></i>
+                                    View Sessions
+                                </button>
+                            </div>
+                            <div class="security-item">
+                                <div class="security-info">
+                                    <h4>Login History</h4>
+                                    <p>Review your recent login activity</p>
+                                </div>
+                                <button class="btn btn-outline" onclick="viewLoginHistory()">
+                                    <i class="fas fa-history"></i>
+                                    View History
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="{% static 'js/admin-dashboard.js' %}"></script>
+    <script src="{% static 'js/admin-forms.js' %}"></script>
+    <script>
+        // Profile form handling
+        document.getElementById('profileForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const newPassword = formData.get('new_password');
+            const confirmPassword = formData.get('confirm_password');
+            
+            // Validate password confirmation
+            if (newPassword && newPassword !== confirmPassword) {
+                showNotification('New passwords do not match!', 'error');
+                return;
+            }
+            
+            // Submit form
+            fetch('/api/auth/profile/update/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCSRFToken(),
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification('Profile updated successfully!', 'success');
+                    // Update user info in header
+                    updateUserInfo(data.user);
+                } else {
+                    showNotification(data.message || 'Failed to update profile', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Profile update error:', error);
+                showNotification('Failed to update profile', 'error');
+            });
+        });
+
+        function resetForm() {
+            document.getElementById('profileForm').reset();
+            showNotification('Form reset to original values', 'info');
+        }
+
+        function showPasswordForm() {
+            document.getElementById('current_password').focus();
+            showNotification('Enter your current password to change it', 'info');
+        }
+
+        function viewSessions() {
+            showNotification('Session management coming soon!', 'info');
+        }
+
+        function viewLoginHistory() {
+            showNotification('Login history coming soon!', 'info');
+        }
+
+        function updateUserInfo(user) {
+            const userName = document.querySelector('.user-name');
+            if (userName && user.first_name && user.last_name) {
+                userName.textContent = `${user.first_name} ${user.last_name}`;
+            }
+        }
+
+        function togglePassword(fieldId) {
+            const field = document.getElementById(fieldId);
+            const toggle = field.nextElementSibling.querySelector('i');
+            
+            if (field.type === 'password') {
+                field.type = 'text';
+                toggle.classList.remove('fa-eye');
+                toggle.classList.add('fa-eye-slash');
+            } else {
+                field.type = 'password';
+                toggle.classList.remove('fa-eye-slash');
+                toggle.classList.add('fa-eye');
+            }
+        }
+    </script>
+</body>
+</html>

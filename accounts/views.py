@@ -53,6 +53,52 @@ def check_auth(request):
         return Response({'authenticated': True, 'user': UserSerializer(request.user).data})
     return Response({'authenticated': False}, status=status.HTTP_401_UNAUTHORIZED)
 
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def update_profile(request):
+    """Update admin profile"""
+    if not request.user.is_admin or request.user.email != 'admin@elegance.com':
+        return Response({'error': 'Unauthorized'}, status=status.HTTP_401_UNAUTHORIZED)
+    
+    try:
+        user = request.user
+        
+        # Update basic information
+        if 'first_name' in request.data:
+            user.first_name = request.data['first_name']
+        if 'last_name' in request.data:
+            user.last_name = request.data['last_name']
+        if 'phone' in request.data:
+            user.phone = request.data['phone']
+        
+        # Handle password change
+        if 'new_password' in request.data and request.data['new_password']:
+            current_password = request.data.get('current_password', '')
+            new_password = request.data['new_password']
+            confirm_password = request.data.get('confirm_password', '')
+            
+            # Verify current password
+            if not user.check_password(current_password):
+                return Response({'error': 'Current password is incorrect'}, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Verify new password confirmation
+            if new_password != confirm_password:
+                return Response({'error': 'New passwords do not match'}, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Set new password
+            user.set_password(new_password)
+        
+        user.save()
+        
+        return Response({
+            'success': True,
+            'message': 'Profile updated successfully',
+            'user': UserSerializer(user).data
+        })
+        
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
