@@ -4,7 +4,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from django.core.paginator import Paginator
-from django.db.models import Q
+from django.db.models import Q, Sum, Count, Avg
 from django.utils import timezone
 from products.models import Product, Category
 from orders.models import Order, OrderItem
