@@ -1,12 +1,30 @@
-        // API endpoints (replace with your actual backend endpoints)
+        // API endpoints
         const API_ENDPOINTS = {
-            PRODUCTS: '/api/products',
-            CATEGORIES: '/api/categories',
-            INVENTORY: '/api/inventory'
+            PRODUCTS: '/api/products/',
+            CATEGORIES: '/api/products/categories/',
+            CART: '/api/orders/cart/',
+            ORDERS: '/api/orders/',
+            PAYMENTS: '/api/payments/'
         };
 
         // Paystack public key (replace with your live key)
         const PAYSTACK_PUBLIC_KEY = 'pk_test_71d220e5fd848c18440c04f724fbb94d8716cd98';
+
+        // Helper function to get CSRF token
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
 
         // EmailJS configuration (replace with your actual credentials)
         const EMAILJS_CONFIG = {
@@ -82,17 +100,17 @@
             return products;
         };
 
-        // Fetch products from API or use demo data as fallback
+        // Fetch products from API
         async function fetchProducts() {
             try {
-                // Try to fetch from API
                 const response = await fetch(API_ENDPOINTS.PRODUCTS);
                 if (response.ok) {
-                    return await response.json();
+                    const data = await response.json();
+                    return data.results || data; // Handle pagination
                 }
-                throw new Error('API not available');
+                throw new Error(`API error: ${response.status}`);
             } catch (error) {
-                console.log('Using demo products:', error);
+                console.error('Error fetching products:', error);
                 // Fall back to demo products if API is not available
                 return generateDemoProducts();
             }
@@ -109,44 +127,115 @@
         }
         
         // Add to cart
-        function addToCart(product, quantity = 1) {
-            const existingItem = cart.find(item => item.id === product.id);
-            
-            if (existingItem) {
-                existingItem.quantity += quantity;
-            } else {
-                cart.push({
-                    id: product.id,
-                    name: product.name,
-                    price: product.price,
-                    image: product.image,
-                    quantity: quantity
+        async function addToCart(product, quantity = 1) {
+            try {
+                const response = await fetch(API_ENDPOINTS.CART + 'items/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({
+                        product: product.id,
+                        quantity: quantity
+                    })
                 });
+                
+                if (response.ok) {
+                    updateCartCount();
+                    showAddedToCartMessage(product.name);
+                    renderCart();
+                } else {
+                    throw new Error('Failed to add to cart');
+                }
+            } catch (error) {
+                console.error('Error adding to cart:', error);
+                // Fallback to local storage
+                const existingItem = cart.find(item => item.id === product.id);
+                
+                if (existingItem) {
+                    existingItem.quantity += quantity;
+                } else {
+                    cart.push({
+                        id: product.id,
+                        name: product.name,
+                        price: product.price,
+                        image: product.primary_image?.image || product.image,
+                        quantity: quantity
+                    });
+                }
+                
+                localStorage.setItem('cart', JSON.stringify(cart));
+                updateCartCount();
+                showAddedToCartMessage(product.name);
             }
-            
-            localStorage.setItem('cart', JSON.stringify(cart));
-            updateCartCount();
-            showAddedToCartMessage(product.name);
         }
         
         // Remove from cart
-        function removeFromCart(productId) {
-            cart = cart.filter(item => item.id !== productId);
-            localStorage.setItem('cart', JSON.stringify(cart));
-            updateCartCount();
-            renderCart();
+        async function removeFromCart(cartItemId) {
+            try {
+                const response = await fetch(`${API_ENDPOINTS.CART}items/${cartItemId}/delete/`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                });
+                
+                if (response.ok) {
+                    updateCartCount();
+                    renderCart();
+                } else {
+                    throw new Error('Failed to remove item');
+                }
+            } catch (error) {
+                console.error('Error removing from cart:', error);
+                // Fallback to local storage
+                cart = cart.filter(item => item.id !== cartItemId);
+                localStorage.setItem('cart', JSON.stringify(cart));
+                updateCartCount();
+                renderCart();
+            }
         }
         
         // Update quantity
-        function updateQuantity(productId, quantity) {
-            const item = cart.find(item => item.id === productId);
-            if (item) {
-                item.quantity = quantity;
-                if (item.quantity <= 0) {
-                    removeFromCart(productId);
-                } else {
-                    localStorage.setItem('cart', JSON.stringify(cart));
+        async function updateQuantity(cartItemId, quantityChange, isAbsolute = false) {
+            try {
+                const response = await fetch(`${API_ENDPOINTS.CART}items/${cartItemId}/`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({
+                        quantity: isAbsolute ? quantityChange : undefined,
+                        quantity_change: isAbsolute ? undefined : quantityChange
+                    })
+                });
+                
+                if (response.ok) {
+                    updateCartCount();
                     renderCart();
+                } else {
+                    throw new Error('Failed to update quantity');
+                }
+            } catch (error) {
+                console.error('Error updating quantity:', error);
+                // Fallback to local storage
+                const item = cart.find(item => item.id === cartItemId);
+                if (item) {
+                    if (isAbsolute) {
+                        item.quantity = quantityChange;
+                    } else {
+                        item.quantity += quantityChange;
+                    }
+                    
+                    if (item.quantity <= 0) {
+                        removeFromCart(cartItemId);
+                    } else {
+                        localStorage.setItem('cart', JSON.stringify(cart));
+                        updateCartCount();
+                        renderCart();
+                    }
                 }
             }
         }
@@ -190,10 +279,23 @@
         }
         
         // Render cart items
-        function renderCart() {
+        async function renderCart() {
             const cartItems = document.getElementById('cart-items');
             const cartTotal = document.getElementById('cart-total');
             
+            try {
+                // Fetch cart from backend
+                const response = await fetch(API_ENDPOINTS.CART);
+                if (response.ok) {
+                    const cartData = await response.json();
+                    renderCartItems(cartData);
+                    return;
+                }
+            } catch (error) {
+                console.error('Error fetching cart:', error);
+            }
+            
+            // Fallback to local storage
             if (cart.length === 0) {
                 cartItems.innerHTML = `
                     <div class="empty-cart">
@@ -227,24 +329,66 @@
             cartItems.innerHTML = itemsHTML;
             cartTotal.textContent = `₦${calculateCartTotal().toFixed(2)}`;
             
-            // Add event listeners to quantity buttons
+            // Add event listeners
+            addCartEventListeners();
+        }
+
+        // Render cart items from backend data
+        function renderCartItems(cartData) {
+            const cartItems = document.getElementById('cart-items');
+            const cartTotal = document.getElementById('cart-total');
+            
+            if (!cartData.items || cartData.items.length === 0) {
+                cartItems.innerHTML = `
+                    <div class="empty-cart">
+                        <i class="fas fa-shopping-cart"></i>
+                        <p>Your cart is empty</p>
+                    </div>
+                `;
+                cartTotal.textContent = '₦0.00';
+                return;
+            }
+            
+            let itemsHTML = '';
+            cartData.items.forEach(item => {
+                const productImage = item.product.primary_image?.image || item.product.images?.[0]?.image || '/static/images/default-product.jpg';
+                itemsHTML += `
+                    <div class="cart-item" data-id="${item.id}">
+                        <img src="${productImage}" alt="${item.product.name}" class="cart-item-img">
+                        <div class="cart-item-details">
+                            <div class="cart-item-name">${item.product.name}</div>
+                            <div class="cart-item-price">₦${item.product.price.toFixed(2)}</div>
+                            <div class="cart-item-quantity">
+                                <button class="quantity-btn minus" data-id="${item.id}">-</button>
+                                <input type="number" class="quantity-input" value="${item.quantity}" min="1" data-id="${item.id}">
+                                <button class="quantity-btn plus" data-id="${item.id}">+</button>
+                            </div>
+                        </div>
+                        <button class="remove-item" data-id="${item.id}"><i class="fas fa-times"></i></button>
+                    </div>
+                `;
+            });
+            
+            cartItems.innerHTML = itemsHTML;
+            cartTotal.textContent = `₦${cartData.total_amount.toFixed(2)}`;
+            
+            // Add event listeners
+            addCartEventListeners();
+        }
+
+        // Add event listeners to cart items
+        function addCartEventListeners() {
             document.querySelectorAll('.quantity-btn.minus').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const id = parseInt(this.getAttribute('data-id'));
-                    const item = cart.find(item => item.id === id);
-                    if (item) {
-                        updateQuantity(id, item.quantity - 1);
-                    }
+                    updateQuantity(id, -1);
                 });
             });
             
             document.querySelectorAll('.quantity-btn.plus').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const id = parseInt(this.getAttribute('data-id'));
-                    const item = cart.find(item => item.id === id);
-                    if (item) {
-                        updateQuantity(id, item.quantity + 1);
-                    }
+                    updateQuantity(id, 1);
                 });
             });
             
@@ -252,7 +396,7 @@
                 input.addEventListener('change', function() {
                     const id = parseInt(this.getAttribute('data-id'));
                     const quantity = parseInt(this.value) || 1;
-                    updateQuantity(id, quantity);
+                    updateQuantity(id, quantity, true);
                 });
             });
             
@@ -312,39 +456,119 @@
         }
         
         // Process payment with Paystack
-        function processPayment(orderData) {
-            const handler = PaystackPop.setup({
-                key: PAYSTACK_PUBLIC_KEY,
-                email: orderData.email,
-                amount: orderData.total * 100, // Convert to kobo
-                currency: 'NGN',
-                ref: 'ELG-' + Math.floor((Math.random() * 1000000000) + 1), // Generate a random reference
-                callback: function(response) {
-                    // Payment successful
-                    console.log('Payment successful!', response);
-                    
-                    // Save order to local storage
-                    saveOrderToStorage(orderData, response.reference);
-                    
-                    // Send order email
-                    sendOrderEmail(orderData);
-                    
-                    // Show success message
-                    document.getElementById('order-success').classList.add('active');
-                    document.getElementById('modal-overlay').classList.add('active');
-                    
-                    // Clear cart
-                    cart = [];
-                    localStorage.removeItem('cart');
-                    updateCartCount();
-                },
-                onClose: function() {
-                    // User closed the payment window
-                    alert('Payment was not completed. Please try again.');
+        async function processPayment(orderData) {
+            try {
+                // Create order first
+                const orderResponse = await fetch(API_ENDPOINTS.ORDERS + 'create/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({
+                        customer_name: orderData.name,
+                        customer_email: orderData.email,
+                        customer_phone: orderData.phone,
+                        customer_whatsapp: orderData.whatsapp,
+                        shipping_address: orderData.address,
+                        shipping_city: orderData.city || 'Lagos',
+                        shipping_state: orderData.state || 'Lagos',
+                        shipping_zip: orderData.zip || '',
+                        subtotal: orderData.total,
+                        shipping_cost: 0,
+                        total_amount: orderData.total,
+                        payment_method: 'paystack',
+                        items: orderData.items.map(item => ({
+                            product: item.id,
+                            product_name: item.name,
+                            quantity: item.quantity,
+                            unit_price: item.price,
+                            total_price: item.price * item.quantity
+                        }))
+                    })
+                });
+
+                if (!orderResponse.ok) {
+                    throw new Error('Failed to create order');
                 }
-            });
-            
-            handler.openIframe();
+
+                const order = await orderResponse.json();
+
+                // Initialize Paystack payment
+                const paymentResponse = await fetch(API_ENDPOINTS.PAYMENTS + 'paystack/initialize/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({
+                        order_number: order.order_number,
+                        email: orderData.email,
+                        amount: orderData.total,
+                        callback_url: window.location.origin + '/payment/callback/'
+                    })
+                });
+
+                if (!paymentResponse.ok) {
+                    throw new Error('Failed to initialize payment');
+                }
+
+                const paymentData = await paymentResponse.json();
+
+                // Initialize Paystack
+                const handler = PaystackPop.setup({
+                    key: PAYSTACK_PUBLIC_KEY,
+                    email: orderData.email,
+                    amount: orderData.total * 100, // Convert to kobo
+                    currency: 'NGN',
+                    ref: paymentData.reference,
+                    callback: async function(response) {
+                        // Verify payment
+                        const verifyResponse = await fetch(API_ENDPOINTS.PAYMENTS + 'paystack/verify/', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': getCookie('csrftoken')
+                            },
+                            body: JSON.stringify({
+                                reference: response.reference
+                            })
+                        });
+
+                        if (verifyResponse.ok) {
+                            // Payment successful
+                            console.log('Payment successful!', response);
+                            
+                            // Show success message
+                            document.getElementById('order-success').classList.add('active');
+                            document.getElementById('modal-overlay').classList.add('active');
+                            
+                            // Clear cart
+                            await fetch(API_ENDPOINTS.CART + 'clear/', {
+                                method: 'POST',
+                                headers: {
+                                    'X-CSRFToken': getCookie('csrftoken')
+                                }
+                            });
+                            
+                            cart = [];
+                            localStorage.removeItem('cart');
+                            updateCartCount();
+                        } else {
+                            alert('Payment verification failed. Please contact support.');
+                        }
+                    },
+                    onClose: function() {
+                        // User closed the payment window
+                        alert('Payment was not completed. Please try again.');
+                    }
+                });
+                
+                handler.openIframe();
+            } catch (error) {
+                console.error('Payment error:', error);
+                alert('Payment initialization failed. Please try again.');
+            }
         }
         
         // Save order to local storage
