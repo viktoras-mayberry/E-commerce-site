@@ -53,11 +53,12 @@ function setupEventListeners() {
     const navLinks = document.querySelectorAll('.nav-link');
     navLinks.forEach(link => {
         link.addEventListener('click', function(e) {
-            e.preventDefault();
             const href = this.getAttribute('href');
             if (href.startsWith('#')) {
+                e.preventDefault();
                 handleNavigation(href.substring(1));
             }
+            // Allow normal navigation for non-hash links
         });
     });
     
