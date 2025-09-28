@@ -141,6 +141,51 @@
         .nav-icons {
             display: flex;
             align-items: center;
+            gap: 1rem;
+        }
+        
+        .search-container {
+            display: flex;
+            align-items: center;
+            background: #f8f9fa;
+            border-radius: 25px;
+            padding: 0.5rem 1rem;
+            border: 1px solid #e9ecef;
+            transition: all 0.3s ease;
+        }
+        
+        .search-container:focus-within {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(196, 91, 60, 0.1);
+        }
+        
+        .search-input {
+            border: none;
+            background: transparent;
+            outline: none;
+            padding: 0.5rem;
+            font-size: 0.9rem;
+            color: var(--dark);
+            width: 200px;
+        }
+        
+        .search-input::placeholder {
+            color: #6c757d;
+        }
+        
+        .search-btn {
+            background: none;
+            border: none;
+            color: var(--accent);
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+        
+        .search-btn:hover {
+            background: var(--accent);
+            color: white;
         }
         
         .icon-link {
@@ -915,7 +960,10 @@
             </ul>
             
             <div class="nav-icons">
-                <a href="#" class="icon-link"><i class="fas fa-search"></i></a>
+                <div class="search-container">
+                    <input type="text" class="search-input" placeholder="Search products..." id="search-input">
+                    <button class="search-btn"><i class="fas fa-search"></i></button>
+                </div>
                 <a href="#" class="icon-link">
                     <i class="fas fa-shopping-cart" onclick="alert('Please check our Jewelry page or Househould item page to use this cart.')"></i>
                     <span class="cart-count">0</span>
@@ -1365,6 +1413,45 @@
                             item.classList.remove('active');
                         });
                     }
+                }
+            });
+            
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchBtn = document.querySelector('.search-btn');
+            
+            function performSearch() {
+                const searchTerm = searchInput.value.toLowerCase().trim();
+                
+                if (searchTerm === '') {
+                    return;
+                }
+                
+                // Check if search term matches jewelry
+                if (searchTerm.includes('jewelry') || searchTerm.includes('necklace') || 
+                    searchTerm.includes('earring') || searchTerm.includes('ring') || 
+                    searchTerm.includes('bracelet') || searchTerm.includes('jewel')) {
+                    window.location.href = "{% url 'jewelry' %}";
+                }
+                // Check if search term matches home decor
+                else if (searchTerm.includes('home') || searchTerm.includes('decor') || 
+                         searchTerm.includes('furniture') || searchTerm.includes('tableware') || 
+                         searchTerm.includes('lighting') || searchTerm.includes('textile')) {
+                    window.location.href = "{% url 'home_decor' %}";
+                }
+                // Default to jewelry page
+                else {
+                    window.location.href = "{% url 'jewelry' %}";
+                }
+            }
+            
+            // Search button click
+            searchBtn.addEventListener('click', performSearch);
+            
+            // Enter key press
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    performSearch();
                 }
             });
         });
