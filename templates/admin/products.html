@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Management - Elegance Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/admin-dashboard.css' %}">
+    <link rel="stylesheet" href="{% static 'css/admin-products.css' %}">
+</head>
+<body>
+    <div class="admin-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-gem"></i>
+                    <span>Elegance Admin</span>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <a href="{% url 'dashboard' %}" class="nav-link">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="nav-item active">
+                        <a href="{% url 'admin_products' %}" class="nav-link">
+                            <i class="fas fa-box"></i>
+                            <span>Products</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{% url 'admin_orders' %}" class="nav-link">
+                            <i class="fas fa-shopping-cart"></i>
+                            <span>Orders</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{% url 'admin_inventory' %}" class="nav-link">
+                            <i class="fas fa-warehouse"></i>
+                            <span>Inventory</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{% url 'admin_analytics' %}" class="nav-link">
+                            <i class="fas fa-chart-line"></i>
+                            <span>Analytics</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{% url 'admin_settings' %}" class="nav-link">
+                            <i class="fas fa-cog"></i>
+                            <span>Settings</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-left">
+                    <button class="sidebar-toggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <h1>Product Management</h1>
+                </div>
+                <div class="header-right">
+                    <div class="user-menu">
+                        <div class="user-info">
+                            <span class="user-name">{{ admin_user.first_name }} {{ admin_user.last_name }}</span>
+                            <span class="user-role">Administrator</span>
+                        </div>
+                        <div class="user-avatar">
+                            <i class="fas fa-user-circle"></i>
+                        </div>
+                        <div class="dropdown-menu">
+                            <a href="#" class="dropdown-item">
+                                <i class="fas fa-user"></i>
+                                Profile
+                            </a>
+                            <a href="#" class="dropdown-item">
+                                <i class="fas fa-cog"></i>
+                                Settings
+                            </a>
+                            <hr>
+                            <a href="#" class="dropdown-item logout">
+                                <i class="fas fa-sign-out-alt"></i>
+                                Logout
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Product Management Content -->
+            <div class="dashboard-content">
+                <!-- Filters and Search -->
+                <div class="filters-section">
+                    <form method="GET" class="filters-form">
+                        <div class="filter-group">
+                            <input type="text" name="search" placeholder="Search products..." value="{{ search }}" class="search-input">
+                            <button type="submit" class="search-btn">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <select name="category" class="filter-select">
+                                <option value="">All Categories</option>
+                                {% for category in categories %}
+                                <option value="{{ category.id }}" {% if category.id|stringformat:"s" == selected_category %}selected{% endif %}>
+                                    {{ category.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <select name="status" class="filter-select">
+                                <option value="">All Products</option>
+                                <option value="featured" {% if selected_status == 'featured' %}selected{% endif %}>Featured</option>
+                                <option value="bestseller" {% if selected_status == 'bestseller' %}selected{% endif %}>Best Sellers</option>
+                                <option value="new_arrival" {% if selected_status == 'new_arrival' %}selected{% endif %}>New Arrivals</option>
+                                <option value="low_stock" {% if selected_status == 'low_stock' %}selected{% endif %}>Low Stock</option>
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <select name="sort" class="filter-select">
+                                <option value="-created_at" {% if sort == '-created_at' %}selected{% endif %}>Newest First</option>
+                                <option value="created_at" {% if sort == 'created_at' %}selected{% endif %}>Oldest First</option>
+                                <option value="name" {% if sort == 'name' %}selected{% endif %}>Name A-Z</option>
+                                <option value="-name" {% if sort == '-name' %}selected{% endif %}>Name Z-A</option>
+                                <option value="price" {% if sort == 'price' %}selected{% endif %}>Price Low-High</option>
+                                <option value="-price" {% if sort == '-price' %}selected{% endif %}>Price High-Low</option>
+                            </select>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-filter"></i>
+                            Apply Filters
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Products Table -->
+                <div class="products-section">
+                    <div class="section-header">
+                        <h2>Products ({{ products.paginator.count }})</h2>
+                        <a href="{% url 'admin_add_product' %}" class="btn btn-primary">
+                            <i class="fas fa-plus"></i>
+                            Add Product
+                        </a>
+                    </div>
+                    
+                    <div class="products-table">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Image</th>
+                                    <th>Product</th>
+                                    <th>Category</th>
+                                    <th>Price</th>
+                                    <th>Stock</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for product in products %}
+                                <tr>
+                                    <td class="product-image">
+                                        {% if product.image %}
+                                        <img src="{{ product.image.url }}" alt="{{ product.name }}" class="product-thumb">
+                                        {% else %}
+                                        <div class="no-image">
+                                            <i class="fas fa-image"></i>
+                                        </div>
+                                        {% endif %}
+                                    </td>
+                                    <td class="product-info">
+                                        <div class="product-name">{{ product.name }}</div>
+                                        <div class="product-sku">SKU: {{ product.sku }}</div>
+                                    </td>
+                                    <td class="product-category">{{ product.category.name }}</td>
+                                    <td class="product-price">${{ product.price }}</td>
+                                    <td class="product-stock">
+                                        <span class="stock-quantity {% if product.stock_quantity <= 10 %}low-stock{% endif %}">
+                                            {{ product.stock_quantity }}
+                                        </span>
+                                    </td>
+                                    <td class="product-status">
+                                        <div class="status-badges">
+                                            {% if product.is_featured %}
+                                            <span class="status-badge featured">Featured</span>
+                                            {% endif %}
+                                            {% if product.is_bestseller %}
+                                            <span class="status-badge bestseller">Best Seller</span>
+                                            {% endif %}
+                                            {% if product.is_new_arrival %}
+                                            <span class="status-badge new-arrival">New Arrival</span>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                    <td class="product-actions">
+                                        <div class="action-buttons">
+                                            <a href="{% url 'admin_edit_product' product.id %}" class="btn btn-sm btn-outline" title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <button onclick="deleteProduct({{ product.id }}, '{{ product.name }}')" class="btn btn-sm btn-danger" title="Delete">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="empty-state">
+                                        <div class="empty-content">
+                                            <i class="fas fa-box"></i>
+                                            <h3>No products found</h3>
+                                            <p>Try adjusting your filters or add a new product.</p>
+                                            <a href="{% url 'admin_add_product' %}" class="btn btn-primary">
+                                                <i class="fas fa-plus"></i>
+                                                Add Product
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Pagination -->
+                    {% if products.has_other_pages %}
+                    <div class="pagination">
+                        {% if products.has_previous %}
+                        <a href="?page=1{% if search %}&search={{ search }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}" class="page-link">
+                            <i class="fas fa-angle-double-left"></i>
+                        </a>
+                        <a href="?page={{ products.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}" class="page-link">
+                            <i class="fas fa-angle-left"></i>
+                        </a>
+                        {% endif %}
+                        
+                        <span class="page-info">
+                            Page {{ products.number }} of {{ products.paginator.num_pages }}
+                        </span>
+                        
+                        {% if products.has_next %}
+                        <a href="?page={{ products.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}" class="page-link">
+                            <i class="fas fa-angle-right"></i>
+                        </a>
+                        <a href="?page={{ products.paginator.num_pages }}{% if search %}&search={{ search }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}" class="page-link">
+                            <i class="fas fa-angle-double-right"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Delete Product</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete <strong id="productName"></strong>?</p>
+                <p class="warning">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+                <button class="btn btn-danger" onclick="confirmDelete()">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="{% static 'js/admin-dashboard.js' %}"></script>
+    <script src="{% static 'js/admin-products.js' %}"></script>
+</body>
+</html>

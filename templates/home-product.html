@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <title>Home Decor - Elegance</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3.2.0/dist/email.min.js"></script>
+    <script src="https://js.paystack.co/v1/inline.js"></script>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/home-product.css' %}">
+    <script defer src="{% static 'js/home-product.js' %}"></script>
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- Demo Notification -->
+    <div class="demo-notification" id="demo-notification" style="display: none;">
+        <span></span>
+        <button onclick="document.getElementById('demo-notification').style.display='none'">Dismiss</button>
+    </div>
+
+    <!-- Cart Modal -->
+    <div class="cart-overlay" id="cart-overlay"></div>
+    <div class="cart-modal" id="cart-modal">
+        <div class="cart-header">
+            <h3 class="cart-title">Your Cart</h3>
+            <button class="close-cart" id="close-cart"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="cart-items" id="cart-items">
+            <!-- Cart items will be dynamically inserted here -->
+        </div>
+        <div class="cart-footer">
+            <div class="cart-total">
+                <span>Total:</span>
+                <span id="cart-total">₦0.00</span>
+            </div>
+            <button class="checkout-btn" id="checkout-btn">Proceed to Checkout</button>
+        </div>
+        
+        <!-- Checkout Form -->
+        <div class="checkout-form" id="checkout-form">
+            <button class="back-to-cart" id="back-to-cart"><i class="fas fa-arrow-left"></i> Back to Cart</button>
+            <h3 class="form-title">Shipping Information</h3>
+            
+            <div class="form-group">
+                <label class="form-label" for="full-name">Full Name</label>
+                <input type="text" class="form-input" id="full-name" required>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="email">Email Address</label>
+                <input type="email" class="form-input" id="email" required>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="phone">Phone Number</label>
+                <input type="tel" class="form-input" id="phone" required>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="address">Home Address</label>
+                <textarea class="form-input" id="address" rows="3" required></textarea>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="city">City</label>
+                    <input type="text" class="form-input" id="city" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="zip">ZIP Code</label>
+                    <input type="text" class="form-input" id="zip" required>
+                </div>
+            </div>
+            
+            <button class="paystack-btn" id="paystack-btn">Pay with Paystack</button>
+        </div>
+        
+        <!-- Order Confirmation -->
+        <div class="order-confirmation" id="order-confirmation">
+            <div class="confirmation-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <h3 class="confirmation-title">Order Confirmed!</h3>
+            <p class="confirmation-text">Thank you for your purchase. Your order details have been sent to your email.</p>
+            <button class="continue-shopping" id="continue-shopping">Continue Shopping</button>
+        </div>
+    </div>
+
+    <!-- Header & Navigation -->
+    <header>
+        <div class="container header-container">
+            <a href="/" class="logo">Elegance</a>
+            
+            <div class="hamburger" id="hamburger">
+                <i class="fas fa-bars"></i>
+            </div>
+            
+            <ul class="nav-menu" id="nav-menu">
+                <li class="nav-item"><a href="/" class="nav-link">Home</a></li>
+                
+                <li class="nav-item dropdown">
+                    <a href="jewelry-product.html" class="nav-link">Jewelry <i class="fas fa-chevron-down"></i></a>
+                    <div class="dropdown-content">
+                        <a href="jewelry-product.html" class="dropdown-item">Necklaces</a>
+                        <a href="jewelry-product.html" class="dropdown-item">Earrings</a>
+                        <a href="jewelry-product.html" class="dropdown-item">Rings</a>
+                        <a href="jewelry-product.html" class="dropdown-item">Bracelets</a>
+                    </div>
+                </li>
+                
+                <li class="nav-item dropdown">
+                    <a href="home-product.html" class="nav-link active">Home Decor <i class="fas fa-chevron-down"></i></a>
+                    <div class="dropdown-content">
+                        <a href="home-product.html" class="dropdown-item">Tableware</a>
+                        <a href="home-product.html" class="dropdown-item">Decorative Accents</a>
+                        <a href="home-product.html" class="dropdown-item">Lighting</a>
+                        <a href="home-product.html" class="dropdown-item">Textiles</a>
+                    </div>
+                </li>
+                
+                <li class="nav-item"><a href="#" class="nav-link">Our Story</a></li>
+                <li class="nav-item"><a href="#" class="nav-link">Contact</a></li>
+            </ul>
+            
+            <div class="nav-icons">
+                <div class="search-container">
+                    <input type="text" class="search-input" placeholder="Search products..." id="search-input">
+                    <button class="search-btn"><i class="fas fa-search"></i></button>
+                </div>
+                <a href="#" class="icon-link" id="cart-icon">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span class="cart-count">0</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Page Header -->
+    <section class="page-header">
+        <div class="container">
+            <h1 class="page-title">Home Decor Collection</h1>
+            <ul class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/">Home</a></li>
+                <li class="breadcrumb-item"><a href="#">Products</a></li>
+                <li class="breadcrumb-item">Home Decor</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- Category Content -->
+    <section class="category-content">
+        <div class="container category-container">
+            <!-- Filters Sidebar -->
+            <div class="filters-sidebar">
+                <div class="filter-widget">
+                    <div class="filter-title">
+                        <h3>Categories</h3>
+                        <span class="reset-btn">Reset</span>
+                    </div>
+                    <ul class="filter-options">
+                        <li class="filter-option">
+                            <input type="checkbox" id="tableware" checked>
+                            <label for="tableware">Tableware</label>
+                        </li>
+                        <li class="filter-option">
+                            <input type="checkbox" id="decorative" checked>
+                            <label for="decorative">Decorative Accents</label>
+                        </li>
+                        <li class="filter-option">
+                            <input type="checkbox" id="lighting" checked>
+                            <label for="lighting">Lighting</label>
+                        </li>
+                        <li class="filter-option">
+                            <input type="checkbox" id="textiles" checked>
+                            <label for="textiles">Textiles</label>
+                        </li>
+                    </ul>
+                </div>
+                
+                <!-- Stock Status Filter -->
+                <div class="filter-widget" id="stock-status-filter">
+                    <div class="filter-title">
+                        <h3>Stock Status</h3>
+                    </div>
+                    <ul class="filter-options">
+                        <li class="filter-option">
+                            <input type="checkbox" id="in-stock" checked>
+                            <label for="in-stock">In Stock</label>
+                        </li>
+                        <li class="filter-option">
+                            <input type="checkbox" id="low-stock" checked>
+                            <label for="low-stock">Low Stock</label>
+                        </li>
+                        <li class="filter-option">
+                            <input type="checkbox" id="out-of-stock">
+                            <label for="out-of-stock">Out of Stock</label>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Products Grid -->
+            <div class="products-grid">
+                <div class="grid-header">
+                    <div>
+                        <h2 class="grid-title">All Home Decor</h2>
+                        <p class="results-count">Showing <span id="showing-count">12</span> of <span id="total-count">200</span> products</p>
+                    </div>
+                    <div class="sort">
+                        <select class="sort-select" id="sort-select">
+                            <option>Default Sorting</option>
+                            <option>Price: Low to High</option>
+                            <option>Price: High to Low</option>
+                            <option>Most Popular</option>
+                            <option>Newest First</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="products" id="products-container">
+                    <!-- Products will be dynamically inserted here -->
+                </div>
+
+                <!-- Pagination -->
+                <div class="pagination" id="pagination">
+                    <!-- Pagination will be dynamically inserted here -->
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container footer-container">
+            <div class="footer-col" style="animation-delay: 0.1s">
+                <h3 class="footer-title">Elegance</h3>
+                <p>Bringing you carefully selected home decor and jewelry that tells a story and transforms your space.</p>
+                <div class="social-links">
+                    <a href="#" class="social-link"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-pinterest-p"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
+                </div>
+            </div>
+            
+            <div class="footer-col" style="animation-delay: 0.2s">
+                <h3 class="footer-title">Shop</h3>
+                <ul class="footer-links">
+                    <li class="footer-link"><a href="#">Jewelry</a></li>
+                    <li class="footer-link"><a href="#">Home Decor</a></li>
+                    <li class="footer-link"><a href="#">New Arrivals</a></li>
+                    <li class="footer-link"><a href="#">Bestsellers</a></li>
+                    <li class="footer-link"><a href="#">Sale</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-col" style="animation-delay: 0.3s">
+                <h3 class="footer-title">Help</h3>
+                <ul class="footer-links">
+                    <li class="footer-link"><a href="#">Contact Us</a></li>
+                    <li class="footer-link"><a href="#">Shipping & Returns</a></li>
+                    <li class="footer-link"><a href="#">FAQ</a></li>
+                    <li class="footer-link"><a href="#">Care Guide</a></li>
+                    <li class="footer-link"><a href="#">Track Order</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-col" style="animation-delay: 0.4s">
+                <h3 class="footer-title">About</h3>
+                <ul class="footer-links">
+                    <li class="footer-link"><a href="#">Our Story</a></li>
+                    <li class="footer-link"><a href="#">Blog</a></li>
+                    <li class="footer-link"><a href="#">Sustainability</a></li>
+                    <li class="footer-link"><a href="#">Privacy Policy</a></li>
+                    <li class="footer-link"><a href="#">Terms of Service</a></li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="copyright">
+            <p>&copy; 2023 Elegance. All rights reserved.</p>
+        </div>
+    </footer>
+</body>
+</html>
