@@ -276,8 +276,54 @@
         }
 
         function exportOrders() {
-            // Implementation for exporting orders
-            console.log('Exporting orders...');
+            // Get all order data from the table
+            const table = document.querySelector('.data-table');
+            const rows = table.querySelectorAll('tbody tr');
+            
+            if (rows.length === 0) {
+                showNotification('No orders data to export', 'warning');
+                return;
+            }
+            
+            // Create CSV content
+            let csvContent = 'Order ID,Customer,Items,Total,Status,Date\n';
+            
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                if (cells.length >= 6) {
+                    const orderId = cells[0].querySelector('.order-id strong').textContent.trim();
+                    const customerName = cells[1].querySelector('.customer-name').textContent.trim();
+                    const items = cells[2].querySelector('.item-count').textContent.trim();
+                    const total = cells[3].querySelector('.order-total strong').textContent.trim();
+                    const status = cells[4].querySelector('.status-badge').textContent.trim();
+                    const date = cells[5].querySelector('.order-date').textContent.trim();
+                    
+                    // Escape commas and quotes in CSV
+                    const escapeCSV = (str) => {
+                        if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+                            return '"' + str.replace(/"/g, '""') + '"';
+                        }
+                        return str;
+                    };
+                    
+                    csvContent += `${escapeCSV(orderId)},${escapeCSV(customerName)},${escapeCSV(items)},${escapeCSV(total)},${escapeCSV(status)},${escapeCSV(date)}\n`;
+                }
+            });
+            
+            // Create and download the file
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            
+            link.setAttribute('href', url);
+            link.setAttribute('download', `orders_export_${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            showNotification('Orders exported successfully!', 'success');
         }
 
         // Filter functionality

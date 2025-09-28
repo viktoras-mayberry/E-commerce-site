@@ -249,8 +249,53 @@
         }
 
         function exportInventory() {
-            // Implementation for exporting inventory
-            console.log('Exporting inventory...');
+            // Get all product data from the table
+            const table = document.querySelector('.data-table');
+            const rows = table.querySelectorAll('tbody tr');
+            
+            if (rows.length === 0) {
+                showNotification('No inventory data to export', 'warning');
+                return;
+            }
+            
+            // Create CSV content
+            let csvContent = 'Product Name,SKU,Current Stock,Status,Last Updated\n';
+            
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                if (cells.length >= 5) {
+                    const productName = cells[0].querySelector('.product-name').textContent.trim();
+                    const sku = cells[1].textContent.trim();
+                    const stock = cells[2].querySelector('strong').textContent.trim();
+                    const status = cells[3].querySelector('.status-badge').textContent.trim();
+                    const lastUpdated = cells[4].textContent.trim();
+                    
+                    // Escape commas and quotes in CSV
+                    const escapeCSV = (str) => {
+                        if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+                            return '"' + str.replace(/"/g, '""') + '"';
+                        }
+                        return str;
+                    };
+                    
+                    csvContent += `${escapeCSV(productName)},${escapeCSV(sku)},${escapeCSV(stock)},${escapeCSV(status)},${escapeCSV(lastUpdated)}\n`;
+                }
+            });
+            
+            // Create and download the file
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            
+            link.setAttribute('href', url);
+            link.setAttribute('download', `inventory_export_${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            showNotification('Inventory exported successfully!', 'success');
         }
 
         // Filter functionality
