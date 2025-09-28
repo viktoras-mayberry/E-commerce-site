@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Product - Elegance Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/admin-dashboard.css' %}">
+    <link rel="stylesheet" href="{% static 'css/admin-forms.css' %}">
+</head>
+<body>
+    <div class="admin-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-gem"></i>
+                    <span>Elegance Admin</span>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <a href="{% url 'dashboard' %}" class="nav-link">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="nav-item active">
+                        <a href="{% url 'admin_products' %}" class="nav-link">
+                            <i class="fas fa-box"></i>
+                            <span>Products</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{% url 'admin_orders' %}" class="nav-link">
+                            <i class="fas fa-shopping-cart"></i>
+                            <span>Orders</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{% url 'admin_inventory' %}" class="nav-link">
+                            <i class="fas fa-warehouse"></i>
+                            <span>Inventory</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{% url 'admin_analytics' %}" class="nav-link">
+                            <i class="fas fa-chart-line"></i>
+                            <span>Analytics</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{% url 'admin_settings' %}" class="nav-link">
+                            <i class="fas fa-cog"></i>
+                            <span>Settings</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-left">
+                    <button class="sidebar-toggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div class="breadcrumb">
+                        <a href="{% url 'admin_products' %}" class="breadcrumb-link">
+                            <i class="fas fa-arrow-left"></i>
+                            Back to Products
+                        </a>
+                        <i class="fas fa-chevron-right"></i>
+                        <span>Edit Product</span>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <div class="user-menu">
+                        <div class="user-info">
+                            <span class="user-name">{{ admin_user.first_name }} {{ admin_user.last_name }}</span>
+                            <span class="user-role">Administrator</span>
+                        </div>
+                        <div class="user-avatar">
+                            <i class="fas fa-user-circle"></i>
+                        </div>
+                        <div class="dropdown-menu">
+                            <a href="#" class="dropdown-item">
+                                <i class="fas fa-user"></i>
+                                Profile
+                            </a>
+                            <a href="#" class="dropdown-item">
+                                <i class="fas fa-cog"></i>
+                                Settings
+                            </a>
+                            <div class="dropdown-divider"></div>
+                            <a href="{% url 'logout' %}" class="dropdown-item">
+                                <i class="fas fa-sign-out-alt"></i>
+                                Logout
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Edit Product Content -->
+            <div class="dashboard-content">
+                <div class="form-container">
+                    <div class="form-header">
+                        <h1>Edit Product</h1>
+                        <p>Update product information</p>
+                    </div>
+
+                    <form method="POST" enctype="multipart/form-data" class="product-form" id="productForm">
+                        {% csrf_token %}
+                        
+                        <!-- Basic Information -->
+                        <div class="form-section">
+                            <h3>Basic Information</h3>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="name" class="form-label">Product Name *</label>
+                                    <input type="text" id="name" name="name" class="form-input" value="{{ product.name }}" required>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="sku" class="form-label">SKU *</label>
+                                    <input type="text" id="sku" name="sku" class="form-input" value="{{ product.sku }}" required>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="category" class="form-label">Category *</label>
+                                    <select id="category" name="category" class="form-select" required>
+                                        <option value="">Select Category</option>
+                                        {% for category in categories %}
+                                        <option value="{{ category.id }}" {% if category.id == product.category.id %}selected{% endif %}>{{ category.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="price" class="form-label">Price *</label>
+                                    <div class="input-group">
+                                        <span class="input-prefix">$</span>
+                                        <input type="number" id="price" name="price" class="form-input" step="0.01" min="0" value="{{ product.price }}" required>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Description -->
+                        <div class="form-section">
+                            <h3>Description</h3>
+                            <div class="form-group">
+                                <label for="description" class="form-label">Product Description *</label>
+                                <textarea id="description" name="description" class="form-textarea" rows="4" required>{{ product.description }}</textarea>
+                            </div>
+                        </div>
+
+                        <!-- Inventory -->
+                        <div class="form-section">
+                            <h3>Inventory</h3>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="stock_quantity" class="form-label">Stock Quantity *</label>
+                                    <input type="number" id="stock_quantity" name="stock_quantity" class="form-input" min="0" value="{{ product.stock_quantity }}" required>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="compare_price" class="form-label">Compare Price</label>
+                                    <div class="input-group">
+                                        <span class="input-prefix">$</span>
+                                        <input type="number" id="compare_price" name="compare_price" class="form-input" step="0.01" min="0" value="{{ product.compare_price }}">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Product Flags -->
+                        <div class="form-section">
+                            <h3>Product Flags</h3>
+                            <div class="checkbox-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="is_featured" {% if product.is_featured %}checked{% endif %}>
+                                    <span class="checkmark"></span>
+                                    Featured Product
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="is_bestseller" {% if product.is_bestseller %}checked{% endif %}>
+                                    <span class="checkmark"></span>
+                                    Best Seller
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="is_new_arrival" {% if product.is_new_arrival %}checked{% endif %}>
+                                    <span class="checkmark"></span>
+                                    New Arrival
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="is_active" {% if product.is_active %}checked{% endif %}>
+                                    <span class="checkmark"></span>
+                                    Active
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Product Image -->
+                        <div class="form-section">
+                            <h3>Product Image</h3>
+                            <div class="form-group">
+                                <label for="image" class="form-label">Product Image</label>
+                                <div class="file-upload">
+                                    <input type="file" id="image" name="image" class="file-input" accept="image/*">
+                                    <label for="image" class="file-upload-label">
+                                        <i class="fas fa-cloud-upload-alt"></i>
+                                        <span>Choose Image</span>
+                                    </label>
+                                </div>
+                                {% if product.image %}
+                                <div class="current-image">
+                                    <img src="{{ product.image.url }}" alt="Current product image" style="max-width: 200px; max-height: 200px;">
+                                    <p>Current image</p>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="form-actions">
+                            <a href="{% url 'admin_products' %}" class="btn btn-outline">
+                                <i class="fas fa-arrow-left"></i>
+                                Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i>
+                                Update Product
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="{% static 'js/admin-dashboard.js' %}"></script>
+    <script src="{% static 'js/admin-forms.js' %}"></script>
+</body>
+</html>

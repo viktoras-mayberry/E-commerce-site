@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - Elegance Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/admin-dashboard.css' %}">
+    <link rel="stylesheet" href="{% static 'css/admin-forms.css' %}">
+</head>
+<body>
+    <div class="admin-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-gem"></i>
+                    <span>Elegance Admin</span>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <a href="{% url 'dashboard' %}" class="nav-link">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{% url 'admin_products' %}" class="nav-link">
+                            <i class="fas fa-box"></i>
+                            <span>Products</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{% url 'admin_orders' %}" class="nav-link">
+                            <i class="fas fa-shopping-cart"></i>
+                            <span>Orders</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{% url 'admin_inventory' %}" class="nav-link">
+                            <i class="fas fa-warehouse"></i>
+                            <span>Inventory</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{% url 'admin_analytics' %}" class="nav-link">
+                            <i class="fas fa-chart-line"></i>
+                            <span>Analytics</span>
+                        </a>
+                    </li>
+                    <li class="nav-item active">
+                        <a href="{% url 'admin_settings' %}" class="nav-link">
+                            <i class="fas fa-cog"></i>
+                            <span>Settings</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-left">
+                    <button class="sidebar-toggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <h1>Settings</h1>
+                </div>
+                <div class="header-right">
+                    <div class="user-menu">
+                        <div class="user-info">
+                            <span class="user-name">{{ admin_user.first_name }} {{ admin_user.last_name }}</span>
+                            <span class="user-role">Administrator</span>
+                        </div>
+                        <div class="user-avatar">
+                            <i class="fas fa-user-circle"></i>
+                        </div>
+                        <div class="dropdown-menu">
+                            <a href="#" class="dropdown-item">
+                                <i class="fas fa-user"></i>
+                                Profile
+                            </a>
+                            <a href="#" class="dropdown-item">
+                                <i class="fas fa-cog"></i>
+                                Settings
+                            </a>
+                            <div class="dropdown-divider"></div>
+                            <a href="{% url 'logout' %}" class="dropdown-item">
+                                <i class="fas fa-sign-out-alt"></i>
+                                Logout
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Settings Content -->
+            <div class="dashboard-content">
+                <!-- General Settings -->
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <h3>General Settings</h3>
+                    </div>
+                    <div class="card-content">
+                        <form class="settings-form">
+                            <div class="form-section">
+                                <h4>Store Information</h4>
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label for="store-name" class="form-label">Store Name</label>
+                                        <input type="text" id="store-name" name="store_name" class="form-input" value="Elegance Store">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="store-email" class="form-label">Store Email</label>
+                                        <input type="email" id="store-email" name="store_email" class="form-input" value="admin@elegance.com">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="store-phone" class="form-label">Store Phone</label>
+                                        <input type="tel" id="store-phone" name="store_phone" class="form-input" value="+1 (555) 123-4567">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="store-address" class="form-label">Store Address</label>
+                                        <textarea id="store-address" name="store_address" class="form-textarea" rows="3">123 Elegance Street, Fashion District, NY 10001</textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-section">
+                                <h4>Currency & Pricing</h4>
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label for="currency" class="form-label">Currency</label>
+                                        <select id="currency" name="currency" class="form-select">
+                                            <option value="USD" selected>USD - US Dollar</option>
+                                            <option value="EUR">EUR - Euro</option>
+                                            <option value="GBP">GBP - British Pound</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="tax-rate" class="form-label">Tax Rate (%)</label>
+                                        <input type="number" id="tax-rate" name="tax_rate" class="form-input" value="8.5" step="0.1" min="0" max="100">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i>
+                                    Save Settings
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Payment Settings -->
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <h3>Payment Settings</h3>
+                    </div>
+                    <div class="card-content">
+                        <form class="settings-form">
+                            <div class="form-section">
+                                <h4>Paystack Configuration</h4>
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label for="paystack-public-key" class="form-label">Public Key</label>
+                                        <input type="text" id="paystack-public-key" name="paystack_public_key" class="form-input" placeholder="pk_test_...">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="paystack-secret-key" class="form-label">Secret Key</label>
+                                        <input type="password" id="paystack-secret-key" name="paystack_secret_key" class="form-input" placeholder="sk_test_...">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-section">
+                                <h4>Payment Methods</h4>
+                                <div class="checkbox-group">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="enable_card_payments" checked>
+                                        <span class="checkmark"></span>
+                                        Credit/Debit Cards
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="enable_bank_transfer">
+                                        <span class="checkmark"></span>
+                                        Bank Transfer
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="enable_cash_on_delivery">
+                                        <span class="checkmark"></span>
+                                        Cash on Delivery
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i>
+                                    Save Payment Settings
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Email Settings -->
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <h3>Email Settings</h3>
+                    </div>
+                    <div class="card-content">
+                        <form class="settings-form">
+                            <div class="form-section">
+                                <h4>SMTP Configuration</h4>
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label for="smtp-host" class="form-label">SMTP Host</label>
+                                        <input type="text" id="smtp-host" name="smtp_host" class="form-input" value="smtp.gmail.com">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="smtp-port" class="form-label">SMTP Port</label>
+                                        <input type="number" id="smtp-port" name="smtp_port" class="form-input" value="587">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="smtp-username" class="form-label">Username</label>
+                                        <input type="email" id="smtp-username" name="smtp_username" class="form-input">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="smtp-password" class="form-label">Password</label>
+                                        <input type="password" id="smtp-password" name="smtp_password" class="form-input">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-section">
+                                <h4>Email Templates</h4>
+                                <div class="checkbox-group">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="send_order_confirmation" checked>
+                                        <span class="checkmark"></span>
+                                        Send Order Confirmation
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="send_shipping_notification" checked>
+                                        <span class="checkmark"></span>
+                                        Send Shipping Notification
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="send_delivery_confirmation" checked>
+                                        <span class="checkmark"></span>
+                                        Send Delivery Confirmation
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i>
+                                    Save Email Settings
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- System Settings -->
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <h3>System Settings</h3>
+                    </div>
+                    <div class="card-content">
+                        <form class="settings-form">
+                            <div class="form-section">
+                                <h4>Maintenance Mode</h4>
+                                <div class="checkbox-group">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="maintenance_mode">
+                                        <span class="checkmark"></span>
+                                        Enable Maintenance Mode
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="form-section">
+                                <h4>Security</h4>
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label for="session-timeout" class="form-label">Session Timeout (minutes)</label>
+                                        <input type="number" id="session-timeout" name="session_timeout" class="form-input" value="30" min="5" max="1440">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="max-login-attempts" class="form-label">Max Login Attempts</label>
+                                        <input type="number" id="max-login-attempts" name="max_login_attempts" class="form-input" value="5" min="3" max="10">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i>
+                                    Save System Settings
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="{% static 'js/admin-dashboard.js' %}"></script>
+    <script src="{% static 'js/admin-forms.js' %}"></script>
+    <script>
+        // Settings form handling
+        document.querySelectorAll('.settings-form').forEach(form => {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                // Implementation for saving settings
+                console.log('Saving settings...');
+                alert('Settings saved successfully!');
+            });
+        });
+    </script>
+</body>
+</html>

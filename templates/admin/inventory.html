@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory Management - Elegance Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/admin-dashboard.css' %}">
+    <link rel="stylesheet" href="{% static 'css/admin-forms.css' %}">
+</head>
+<body>
+    <div class="admin-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-gem"></i>
+                    <span>Elegance Admin</span>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <a href="{% url 'dashboard' %}" class="nav-link">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{% url 'admin_products' %}" class="nav-link">
+                            <i class="fas fa-box"></i>
+                            <span>Products</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{% url 'admin_orders' %}" class="nav-link">
+                            <i class="fas fa-shopping-cart"></i>
+                            <span>Orders</span>
+                        </a>
+                    </li>
+                    <li class="nav-item active">
+                        <a href="{% url 'admin_inventory' %}" class="nav-link">
+                            <i class="fas fa-warehouse"></i>
+                            <span>Inventory</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{% url 'admin_analytics' %}" class="nav-link">
+                            <i class="fas fa-chart-line"></i>
+                            <span>Analytics</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{% url 'admin_settings' %}" class="nav-link">
+                            <i class="fas fa-cog"></i>
+                            <span>Settings</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-left">
+                    <button class="sidebar-toggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <h1>Inventory Management</h1>
+                </div>
+                <div class="header-right">
+                    <div class="user-menu">
+                        <div class="user-info">
+                            <span class="user-name">{{ admin_user.first_name }} {{ admin_user.last_name }}</span>
+                            <span class="user-role">Administrator</span>
+                        </div>
+                        <div class="user-avatar">
+                            <i class="fas fa-user-circle"></i>
+                        </div>
+                        <div class="dropdown-menu">
+                            <a href="#" class="dropdown-item">
+                                <i class="fas fa-user"></i>
+                                Profile
+                            </a>
+                            <a href="#" class="dropdown-item">
+                                <i class="fas fa-cog"></i>
+                                Settings
+                            </a>
+                            <div class="dropdown-divider"></div>
+                            <a href="{% url 'logout' %}" class="dropdown-item">
+                                <i class="fas fa-sign-out-alt"></i>
+                                Logout
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Inventory Content -->
+            <div class="dashboard-content">
+                <!-- Filters -->
+                <div class="filters-section">
+                    <div class="filter-group">
+                        <label for="stock-filter">Stock Status:</label>
+                        <select id="stock-filter" class="filter-select">
+                            <option value="">All Products</option>
+                            <option value="in_stock">In Stock</option>
+                            <option value="low_stock">Low Stock</option>
+                            <option value="out_of_stock">Out of Stock</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <input type="text" id="search-inventory" class="filter-input" placeholder="Search products...">
+                        <button class="filter-btn">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Inventory Table -->
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <h3>Product Inventory</h3>
+                        <div class="card-actions">
+                            <button class="btn btn-outline" onclick="exportInventory()">
+                                <i class="fas fa-download"></i>
+                                Export
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Product</th>
+                                        <th>SKU</th>
+                                        <th>Current Stock</th>
+                                        <th>Status</th>
+                                        <th>Last Updated</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for product in products %}
+                                    <tr>
+                                        <td>
+                                            <div class="product-info">
+                                                <div class="product-name">{{ product.name }}</div>
+                                                <div class="product-category">{{ product.category.name }}</div>
+                                            </div>
+                                        </td>
+                                        <td>{{ product.sku }}</td>
+                                        <td>
+                                            <div class="stock-quantity">
+                                                <strong>{{ product.stock_quantity }}</strong>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="status-badge status-{{ product.stock_status }}">
+                                                {{ product.get_stock_status_display }}
+                                            </span>
+                                        </td>
+                                        <td>{{ product.updated_at|date:"M d, Y" }}</td>
+                                        <td>
+                                            <div class="action-buttons">
+                                                <button class="btn btn-sm btn-primary" onclick="updateStock({{ product.id }})">
+                                                    <i class="fas fa-edit"></i>
+                                                    Update Stock
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="6" class="empty-state">
+                                            <div class="empty-content">
+                                                <i class="fas fa-warehouse"></i>
+                                                <h4>No Products Found</h4>
+                                                <p>There are no products to display.</p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Inventory Statistics -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-boxes"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>{{ total_products }}</h3>
+                            <p>Total Products</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>{{ in_stock_count }}</h3>
+                            <p>In Stock</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>{{ low_stock_count }}</h3>
+                            <p>Low Stock</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-times-circle"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>{{ out_of_stock_count }}</h3>
+                            <p>Out of Stock</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="{% static 'js/admin-dashboard.js' %}"></script>
+    <script src="{% static 'js/admin-forms.js' %}"></script>
+    <script>
+        function updateStock(productId) {
+            const newStock = prompt('Enter new stock quantity:');
+            if (newStock !== null && !isNaN(newStock)) {
+                // Implementation for updating stock
+                console.log('Updating stock for product', productId, 'to', newStock);
+                // You can add AJAX call here to update the stock
+            }
+        }
+
+        function exportInventory() {
+            // Implementation for exporting inventory
+            console.log('Exporting inventory...');
+        }
+
+        // Filter functionality
+        document.getElementById('stock-filter').addEventListener('change', function() {
+            filterInventory();
+        });
+
+        document.getElementById('search-inventory').addEventListener('input', function() {
+            filterInventory();
+        });
+
+        function filterInventory() {
+            // Implementation for filtering inventory
+            console.log('Filtering inventory...');
+        }
+    </script>
+</body>
+</html>

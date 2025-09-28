@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Detail - Elegance Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/admin-dashboard.css' %}">
+    <link rel="stylesheet" href="{% static 'css/admin-forms.css' %}">
+</head>
+<body>
+    <div class="admin-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-gem"></i>
+                    <span>Elegance Admin</span>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <a href="{% url 'dashboard' %}" class="nav-link">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{% url 'admin_products' %}" class="nav-link">
+                            <i class="fas fa-box"></i>
+                            <span>Products</span>
+                        </a>
+                    </li>
+                    <li class="nav-item active">
+                        <a href="{% url 'admin_orders' %}" class="nav-link">
+                            <i class="fas fa-shopping-cart"></i>
+                            <span>Orders</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{% url 'admin_inventory' %}" class="nav-link">
+                            <i class="fas fa-warehouse"></i>
+                            <span>Inventory</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{% url 'admin_analytics' %}" class="nav-link">
+                            <i class="fas fa-chart-line"></i>
+                            <span>Analytics</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{% url 'admin_settings' %}" class="nav-link">
+                            <i class="fas fa-cog"></i>
+                            <span>Settings</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-left">
+                    <button class="sidebar-toggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div class="breadcrumb">
+                        <a href="{% url 'admin_orders' %}" class="breadcrumb-link">
+                            <i class="fas fa-arrow-left"></i>
+                            Back to Orders
+                        </a>
+                        <i class="fas fa-chevron-right"></i>
+                        <span>Order #{{ order.id }}</span>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <div class="user-menu">
+                        <div class="user-info">
+                            <span class="user-name">{{ admin_user.first_name }} {{ admin_user.last_name }}</span>
+                            <span class="user-role">Administrator</span>
+                        </div>
+                        <div class="user-avatar">
+                            <i class="fas fa-user-circle"></i>
+                        </div>
+                        <div class="dropdown-menu">
+                            <a href="#" class="dropdown-item">
+                                <i class="fas fa-user"></i>
+                                Profile
+                            </a>
+                            <a href="#" class="dropdown-item">
+                                <i class="fas fa-cog"></i>
+                                Settings
+                            </a>
+                            <div class="dropdown-divider"></div>
+                            <a href="{% url 'logout' %}" class="dropdown-item">
+                                <i class="fas fa-sign-out-alt"></i>
+                                Logout
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Order Detail Content -->
+            <div class="dashboard-content">
+                <!-- Order Header -->
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <h3>Order #{{ order.id }}</h3>
+                        <div class="card-actions">
+                            <span class="status-badge status-{{ order.status }}">
+                                {{ order.get_status_display }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        <div class="order-info-grid">
+                            <div class="info-item">
+                                <label>Order Date:</label>
+                                <span>{{ order.created_at|date:"F d, Y H:i" }}</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Customer:</label>
+                                <span>{{ order.customer_name|default:"Guest" }}</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Email:</label>
+                                <span>{{ order.customer_email|default:"No email" }}</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Total Amount:</label>
+                                <span class="total-amount">${{ order.total_amount|floatformat:2 }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Order Items -->
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <h3>Order Items</h3>
+                    </div>
+                    <div class="card-content">
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Product</th>
+                                        <th>Quantity</th>
+                                        <th>Price</th>
+                                        <th>Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in order.items.all %}
+                                    <tr>
+                                        <td>
+                                            <div class="product-info">
+                                                <div class="product-name">{{ item.product.name }}</div>
+                                                <div class="product-sku">SKU: {{ item.product.sku }}</div>
+                                            </div>
+                                        </td>
+                                        <td>{{ item.quantity }}</td>
+                                        <td>${{ item.price|floatformat:2 }}</td>
+                                        <td>${{ item.get_total|floatformat:2 }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Order Actions -->
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <h3>Order Actions</h3>
+                    </div>
+                    <div class="card-content">
+                        <div class="action-buttons">
+                            <button class="btn btn-primary" onclick="updateOrderStatus('{{ order.id }}', 'processing')">
+                                <i class="fas fa-cog"></i>
+                                Mark as Processing
+                            </button>
+                            <button class="btn btn-success" onclick="updateOrderStatus('{{ order.id }}', 'shipped')">
+                                <i class="fas fa-truck"></i>
+                                Mark as Shipped
+                            </button>
+                            <button class="btn btn-info" onclick="updateOrderStatus('{{ order.id }}', 'delivered')">
+                                <i class="fas fa-check-circle"></i>
+                                Mark as Delivered
+                            </button>
+                            <button class="btn btn-warning" onclick="updateOrderStatus('{{ order.id }}', 'cancelled')">
+                                <i class="fas fa-times-circle"></i>
+                                Cancel Order
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="{% static 'js/admin-dashboard.js' %}"></script>
+    <script src="{% static 'js/admin-forms.js' %}"></script>
+    <script>
+        function updateOrderStatus(orderId, status) {
+            if (confirm('Are you sure you want to update the order status?')) {
+                // Implementation for updating order status
+                console.log('Updating order', orderId, 'to status:', status);
+                // You can add AJAX call here to update the status
+            }
+        }
+    </script>
+</body>
+</html>
