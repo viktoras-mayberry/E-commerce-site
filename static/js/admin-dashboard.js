@@ -500,71 +500,9 @@ function handleLogoutClick() {
     if (window.logoutInProgress) {
         return;
     }
-    
-    // Show custom logout confirmation modal
-    showLogoutConfirmation();
-}
-
-function showLogoutConfirmation() {
-    // Create custom logout confirmation modal
-    const modal = document.createElement('div');
-    modal.className = 'logout-modal-overlay';
-    modal.innerHTML = `
-        <div class="logout-modal-content">
-            <div class="logout-modal-header">
-                <div class="logout-icon">
-                    <i class="fas fa-sign-out-alt"></i>
-                </div>
-                <h3>Confirm Logout</h3>
-            </div>
-            <div class="logout-modal-body">
-                <p>Are you sure you want to logout?</p>
-                <p class="logout-warning">You will need to login again to access the admin panel.</p>
-            </div>
-            <div class="logout-modal-footer">
-                <button class="btn btn-outline" onclick="cancelLogout()">
-                    <i class="fas fa-times"></i>
-                    Cancel
-                </button>
-                <button class="btn btn-danger" onclick="confirmLogout()">
-                    <i class="fas fa-sign-out-alt"></i>
-                    Logout
-                </button>
-            </div>
-        </div>
-    `;
-    
-    document.body.appendChild(modal);
-    setTimeout(() => {
-        modal.classList.add('show');
-        // Add click outside to close
-        modal.addEventListener('click', function(e) {
-            if (e.target === modal) {
-                cancelLogout();
-            }
-        });
-    }, 10);
-}
-
-function cancelLogout() {
-    const modal = document.querySelector('.logout-modal-overlay');
-    if (modal) {
-        modal.classList.remove('show');
-        setTimeout(() => modal.remove(), 300);
-    }
-}
-
-function confirmLogout() {
     window.logoutInProgress = true;
     
-    // Close the modal first
-    const modal = document.querySelector('.logout-modal-overlay');
-    if (modal) {
-        modal.classList.remove('show');
-        setTimeout(() => modal.remove(), 300);
-    }
-    
-    // Perform logout
+    // Perform logout immediately without confirmation
     fetch('/api/auth/logout/', {
         method: 'POST',
         headers: {
@@ -590,6 +528,8 @@ function confirmLogout() {
         window.logoutInProgress = false; // Reset flag on error
     });
 }
+
+// Modal functions removed - direct logout without confirmation
 
 // Export functions for global access
 window.adminDashboard = {
