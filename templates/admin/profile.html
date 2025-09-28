@@ -264,9 +264,46 @@
     <script src="{% static 'js/admin-dashboard.js' %}"></script>
     <script src="{% static 'js/admin-forms.js' %}"></script>
     <script>
+        // Simple notification function if admin-dashboard.js is not loaded
+        function showNotification(message, type = 'info') {
+            if (typeof window.adminDashboard !== 'undefined' && typeof window.adminDashboard.showNotification === 'function') {
+                window.adminDashboard.showNotification(message, type);
+            } else {
+                // Fallback notification
+                const notification = document.createElement('div');
+                notification.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    background: ${type === 'error' ? '#ef4444' : type === 'success' ? '#10b981' : '#3b82f6'};
+                    color: white;
+                    padding: 1rem 1.5rem;
+                    border-radius: 0.5rem;
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                    z-index: 10000;
+                    font-weight: 500;
+                    max-width: 300px;
+                `;
+                notification.textContent = message;
+                document.body.appendChild(notification);
+                
+                setTimeout(() => {
+                    notification.style.opacity = '0';
+                    notification.style.transform = 'translateX(100%)';
+                    setTimeout(() => notification.remove(), 300);
+                }, 3000);
+            }
+        }
+        
         // Session Management and Login History functions
         function viewSessions() {
-            showNotification('Loading active sessions...', 'info');
+            console.log('View Sessions clicked');
+            try {
+                showNotification('Loading active sessions...', 'info');
+            } catch (error) {
+                console.log('Loading active sessions...');
+                alert('Loading active sessions...');
+            }
             
             // Create modal for sessions
             const modal = document.createElement('div');
@@ -333,11 +370,25 @@
             `;
             
             document.body.appendChild(modal);
-            setTimeout(() => modal.classList.add('show'), 10);
+            setTimeout(() => {
+                modal.classList.add('show');
+                // Add click outside to close
+                modal.addEventListener('click', function(e) {
+                    if (e.target === modal) {
+                        closeModal();
+                    }
+                });
+            }, 10);
         }
         
         function viewLoginHistory() {
-            showNotification('Loading login history...', 'info');
+            console.log('View Login History clicked');
+            try {
+                showNotification('Loading login history...', 'info');
+            } catch (error) {
+                console.log('Loading login history...');
+                alert('Loading login history...');
+            }
             
             // Create modal for login history
             const modal = document.createElement('div');
@@ -416,7 +467,15 @@
             `;
             
             document.body.appendChild(modal);
-            setTimeout(() => modal.classList.add('show'), 10);
+            setTimeout(() => {
+                modal.classList.add('show');
+                // Add click outside to close
+                modal.addEventListener('click', function(e) {
+                    if (e.target === modal) {
+                        closeModal();
+                    }
+                });
+            }, 10);
         }
         
         function closeModal() {
@@ -429,20 +488,33 @@
         
         function terminateSession(button) {
             if (confirm('Are you sure you want to terminate this session?')) {
-                showNotification('Session terminated successfully', 'success');
-                button.closest('.session-item').remove();
+                try {
+                    showNotification('Session terminated successfully', 'success');
+                    button.closest('.session-item').remove();
+                } catch (error) {
+                    console.log('Session terminated successfully');
+                    button.closest('.session-item').remove();
+                }
             }
         }
         
         function terminateAllSessions() {
             if (confirm('Are you sure you want to terminate all other sessions? This will log you out of all other devices.')) {
-                showNotification('All other sessions terminated successfully', 'success');
+                try {
+                    showNotification('All other sessions terminated successfully', 'success');
+                } catch (error) {
+                    console.log('All other sessions terminated successfully');
+                }
                 closeModal();
             }
         }
         
         function exportLoginHistory() {
-            showNotification('Login history exported successfully', 'success');
+            try {
+                showNotification('Login history exported successfully', 'success');
+            } catch (error) {
+                console.log('Login history exported successfully');
+            }
         }
         
         // Profile form handling
