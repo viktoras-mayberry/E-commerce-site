@@ -1034,51 +1034,54 @@
             
             // Global search functionality
             function performGlobalSearch(searchTerm) {
+                console.log('Performing local search for:', searchTerm);
+                
                 // Show loading state
                 const searchBtn = document.querySelector('.search-btn');
                 const originalContent = searchBtn.innerHTML;
                 searchBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
                 searchBtn.disabled = true;
                 
-                fetch(`/api/products/search/?q=${encodeURIComponent(searchTerm)}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.total > 0) {
-                            // Filter results to only show jewelry products
-                            const jewelryResults = data.results.filter(product => 
-                                product.category.toLowerCase().includes('jewelry') ||
-                                product.category.toLowerCase().includes('necklace') ||
-                                product.category.toLowerCase().includes('earring') ||
-                                product.category.toLowerCase().includes('ring') ||
-                                product.category.toLowerCase().includes('bracelet')
-                            );
+                // Use setTimeout to show loading state briefly
+                setTimeout(() => {
+                    try {
+                        // Search through local products
+                        const searchResults = allProducts.filter(product => {
+                            const searchMatch = searchTerm === '' || 
+                                product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                product.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                product.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                checkWordVariations(product.name.toLowerCase(), searchTerm.toLowerCase()) ||
+                                checkWordVariations(product.category.toLowerCase(), searchTerm.toLowerCase()) ||
+                                checkWordVariations(product.description.toLowerCase(), searchTerm.toLowerCase());
                             
-                            if (jewelryResults.length > 0) {
-                                // Update the products display with search results
-                                filteredProducts = jewelryResults;
-                                currentPage = 1;
-                                renderProducts();
-                                
-                                // Show search results summary
-                                showSearchSummary(jewelryResults.length, searchTerm);
-                            } else {
-                                // No jewelry results found
-                                showNoResultsMessage(searchTerm);
-                            }
+                            return searchMatch;
+                        });
+                        
+                        console.log('Search results:', searchResults.length);
+                        
+                        if (searchResults.length > 0) {
+                            // Update the products display with search results
+                            filteredProducts = searchResults;
+                            currentPage = 1;
+                            renderProducts();
+                            updatePagination();
+                            
+                            // Show search results summary
+                            showSearchSummary(searchResults.length, searchTerm);
                         } else {
+                            // No results found
                             showNoResultsMessage(searchTerm);
                         }
-                    })
-                    .catch(error => {
-                        console.error('Global search error:', error);
-                        // Fallback to local search
-                        filterProducts();
-                    })
-                    .finally(() => {
+                    } catch (error) {
+                        console.error('Search error:', error);
+                        showNotification('Search failed. Please try again.', 'error');
+                    } finally {
                         // Reset button state
                         searchBtn.innerHTML = originalContent;
                         searchBtn.disabled = false;
-                    });
+                    }
+                }, 300); // Brief loading state
             }
             
             // Show search results summary
@@ -1182,8 +1185,14 @@
                     checkbox.addEventListener('change', filterProducts);
                 });
                 
-                // Search functionality
-                document.getElementById('search-input').addEventListener('input', filterProducts);
+                // Search functionality with debounce
+                let searchTimeout;
+                document.getElementById('search-input').addEventListener('input', function() {
+                    clearTimeout(searchTimeout);
+                    searchTimeout = setTimeout(() => {
+                        filterProducts();
+                    }, 300); // 300ms debounce
+                });
                 
                 // Sort functionality
                 document.getElementById('sort-select').addEventListener('change', function() {
