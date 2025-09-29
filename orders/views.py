@@ -180,3 +180,52 @@ def order_stats(request):
         'cancelled_orders': cancelled_orders,
         'total_revenue': float(total_revenue)
     })
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def cart_stats(request):
+    """Get cart statistics (Admin only)"""
+    if not request.user.is_admin:
+        return Response({'error': 'Access denied'}, status=status.HTTP_403_FORBIDDEN)
+    
+    from django.db.models import Sum, Count
+    from datetime import datetime, timedelta
+    
+    # Total carts
+    total_carts = Cart.objects.count()
+    
+    # Active carts (updated in last 24 hours)
+    active_carts = Cart.objects.filter(
+        updated_at__gte=datetime.now() - timedelta(days=1)
+    ).count()
+    
+    # Total items in all carts
+    total_cart_items = CartItem.objects.count()
+    
+    # Total cart value
+    total_cart_value = CartItem.objects.aggregate(
+        total=Sum('total_price')
+    )['total'] or 0
+    
+    # Most popular products in carts
+    popular_products = CartItem.objects.values('product__name').annotate(
+        total_quantity=Sum('quantity'),
+        cart_count=Count('cart', distinct=True)
+    ).order_by('-total_quantity')[:5]
+    
+    # Cart abandonment rate (carts with items but no orders)
+    abandoned_carts = Cart.objects.filter(
+        items__isnull=False
+    ).exclude(
+        session_key__in=Order.objects.values_list('session_key', flat=True)
+    ).distinct().count()
+    
+    return Response({
+        'total_carts': total_carts,
+        'active_carts': active_carts,
+        'total_cart_items': total_cart_items,
+        'total_cart_value': float(total_cart_value),
+        'popular_products': list(popular_products),
+        'abandoned_carts': abandoned_carts
+    })

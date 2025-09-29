@@ -128,7 +128,7 @@
                             <i class="fas fa-dollar-sign"></i>
                         </div>
                         <div class="stat-content">
-                            <h3>${{ total_revenue|floatformat:2 }}</h3>
+                            <h3>₦{{ total_sales|floatformat:2 }}</h3>
                             <p>Total Revenue</p>
                         </div>
                     </div>
@@ -143,11 +143,11 @@
                     </div>
                     <div class="stat-card">
                         <div class="stat-icon">
-                            <i class="fas fa-box"></i>
+                            <i class="fas fa-shopping-bag"></i>
                         </div>
                         <div class="stat-content">
-                            <h3>{{ total_products }}</h3>
-                            <p>Total Products</p>
+                            <h3>{{ total_carts }}</h3>
+                            <p>Total Carts</p>
                         </div>
                     </div>
                     <div class="stat-card">
@@ -155,8 +155,48 @@
                             <i class="fas fa-chart-line"></i>
                         </div>
                         <div class="stat-content">
-                            <h3>{{ average_order_value|floatformat:2 }}</h3>
+                            <h3>₦{{ avg_order_value|floatformat:2 }}</h3>
                             <p>Avg Order Value</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cart Analytics -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-shopping-basket"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>{{ active_carts }}</h3>
+                            <p>Active Carts (30 days)</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-boxes"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>{{ total_cart_items }}</h3>
+                            <p>Items in Carts</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-money-bill-wave"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>₦{{ total_cart_value|floatformat:2 }}</h3>
+                            <p>Cart Value</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>{{ abandoned_carts }}</h3>
+                            <p>Abandoned Carts</p>
                         </div>
                     </div>
                 </div>
@@ -214,6 +254,56 @@
                                                 <i class="fas fa-chart-bar"></i>
                                                 <h4>No Sales Data</h4>
                                                 <p>No sales data available for the selected period.</p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Popular Cart Products -->
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <h3>Popular Products in Carts</h3>
+                    </div>
+                    <div class="card-content">
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Product</th>
+                                        <th>Quantity in Carts</th>
+                                        <th>Cart Count</th>
+                                        <th>Trend</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for product in popular_cart_products %}
+                                    <tr>
+                                        <td>
+                                            <div class="product-info">
+                                                <div class="product-name">{{ product.product__name }}</div>
+                                            </div>
+                                        </td>
+                                        <td>{{ product.total_quantity|default:0 }}</td>
+                                        <td>{{ product.cart_count|default:0 }}</td>
+                                        <td>
+                                            <span class="trend-indicator">
+                                                <i class="fas fa-arrow-up"></i>
+                                                +8%
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="4" class="empty-state">
+                                            <div class="empty-content">
+                                                <i class="fas fa-shopping-basket"></i>
+                                                <h4>No Cart Data</h4>
+                                                <p>No products in carts for the selected period.</p>
                                             </div>
                                         </td>
                                     </tr>

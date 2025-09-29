@@ -331,12 +331,38 @@ def analytics_dashboard(request):
         count=Count('id')
     ).order_by('day')
     
+    # Cart analytics
+    from orders.models import Cart, CartItem
+    total_carts = Cart.objects.count()
+    active_carts = Cart.objects.filter(updated_at__gte=start_date).count()
+    total_cart_items = CartItem.objects.count()
+    total_cart_value = CartItem.objects.aggregate(total=Sum('total_price'))['total'] or 0
+    
+    # Most popular products in carts
+    popular_cart_products = CartItem.objects.values('product__name').annotate(
+        total_quantity=Sum('quantity'),
+        cart_count=Count('cart', distinct=True)
+    ).order_by('-total_quantity')[:5]
+    
+    # Cart abandonment rate
+    abandoned_carts = Cart.objects.filter(
+        items__isnull=False
+    ).exclude(
+        session_key__in=Order.objects.values_list('session_key', flat=True)
+    ).distinct().count()
+    
     context = {
         'total_sales': total_sales,
         'total_orders': total_orders,
         'avg_order_value': avg_order_value,
         'top_products': top_products,
         'sales_by_day': sales_by_day,
+        'total_carts': total_carts,
+        'active_carts': active_carts,
+        'total_cart_items': total_cart_items,
+        'total_cart_value': total_cart_value,
+        'popular_cart_products': popular_cart_products,
+        'abandoned_carts': abandoned_carts,
         'admin_user': request.user,
     }
     return render(request, 'admin/analytics.html', context)
