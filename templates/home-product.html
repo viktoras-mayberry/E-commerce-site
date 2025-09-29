@@ -11,7 +11,7 @@
     <script src="https://js.paystack.co/v1/inline.js"></script>
     {% load static %}
     <link rel="stylesheet" href="{% static 'css/home-product.css' %}">
-    <script defer src="{% static 'js/home-product.js' %}"></script>
+    <script defer src="{% static 'js/home-product.js' %}?v=2"></script>
     <script>
         // Pass products data from Django backend to JavaScript
         window.BACKEND_PRODUCTS = {{ products_json|safe }};

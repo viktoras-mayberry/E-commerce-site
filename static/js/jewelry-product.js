@@ -955,9 +955,13 @@
             
             // Filter functionality
             function filterProducts() {
+                console.log('Jewelry page filterProducts function called');
                 const selectedCategories = Array.from(document.querySelectorAll('.filter-option input:checked')).map(input => input.id);
                 const selectedStockStatus = Array.from(document.querySelectorAll('#stock-status-filter input:checked')).map(input => input.id);
                 const searchTerm = document.getElementById('search-input').value.toLowerCase();
+                
+                console.log('Jewelry page search term:', searchTerm);
+                console.log('Jewelry page allProducts count:', allProducts.length);
                 
                 // Always use local search for better performance
                 
@@ -1141,14 +1145,16 @@
                     checkbox.addEventListener('change', filterProducts);
                 });
                 
-                // Search functionality with debounce
-                let searchTimeout;
-                document.getElementById('search-input').addEventListener('input', function() {
-                    clearTimeout(searchTimeout);
-                    searchTimeout = setTimeout(() => {
-                        filterProducts();
-                    }, 300); // 300ms debounce
-                });
+            // Search functionality with debounce
+            let searchTimeout;
+            document.getElementById('search-input').addEventListener('input', function() {
+                console.log('Jewelry page search input triggered:', this.value);
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    console.log('Jewelry page filterProducts called');
+                    filterProducts();
+                }, 300); // 300ms debounce
+            });
                 
                 // Sort functionality
                 document.getElementById('sort-select').addEventListener('change', function() {
