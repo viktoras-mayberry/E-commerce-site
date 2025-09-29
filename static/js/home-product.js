@@ -717,16 +717,64 @@
                     // Stock status filter
                     const stockMatch = selectedStockStatus.length === 0 || selectedStockStatus.includes(product.stockStatus);
                     
-                    // Search filter
+                    // Enhanced search filter with partial matching
                     const searchMatch = searchTerm === '' || 
                         product.name.toLowerCase().includes(searchTerm) ||
-                        product.category.toLowerCase().includes(searchTerm);
+                        product.category.toLowerCase().includes(searchTerm) ||
+                        product.description.toLowerCase().includes(searchTerm) ||
+                        // Check for word variations
+                        checkWordVariations(product.name.toLowerCase(), searchTerm) ||
+                        checkWordVariations(product.category.toLowerCase(), searchTerm) ||
+                        checkWordVariations(product.description.toLowerCase(), searchTerm);
                     
                     return categoryMatch && stockMatch && searchMatch;
                 });
                 
                 currentPage = 1;
                 renderProducts();
+            }
+            
+            // Word variations function for enhanced search
+            function checkWordVariations(text, searchTerm) {
+                const wordVariations = {
+                    'necklace': ['necklaces', 'chain', 'chains', 'pendant', 'pendants'],
+                    'earring': ['earrings', 'ear ring', 'ear rings'],
+                    'ring': ['rings', 'band', 'bands'],
+                    'bracelet': ['bracelets', 'bangle', 'bangles'],
+                    'diamond': ['diamonds', 'gem', 'gems', 'stone', 'stones'],
+                    'gold': ['golden', 'yellow gold', 'rose gold', 'white gold'],
+                    'silver': ['silver plated', 'sterling silver'],
+                    'vase': ['vases', 'pottery', 'ceramic'],
+                    'lamp': ['lamps', 'lighting', 'light'],
+                    'candle': ['candles', 'candlestick', 'candlesticks'],
+                    'bowl': ['bowls', 'dish', 'dishes'],
+                    'plate': ['plates', 'platter', 'platters'],
+                    'cup': ['cups', 'mug', 'mugs', 'glass', 'glasses'],
+                    'decor': ['decoration', 'decorative', 'ornament', 'ornaments'],
+                    'home': ['house', 'interior', 'furnishing', 'furnishings']
+                };
+                
+                // Check if search term matches any variations
+                for (const [key, variations] of Object.entries(wordVariations)) {
+                    if (searchTerm.includes(key)) {
+                        for (const variation of variations) {
+                            if (text.includes(variation)) return true;
+                        }
+                    }
+                    for (const variation of variations) {
+                        if (searchTerm.includes(variation) && text.includes(key)) return true;
+                    }
+                }
+                
+                // Check for partial word matches
+                const words = text.split(/\s+/);
+                for (const word of words) {
+                    if (word.includes(searchTerm) || searchTerm.includes(word)) {
+                        return true;
+                    }
+                }
+                
+                return false;
             }
             
             // Global search functionality

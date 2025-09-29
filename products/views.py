@@ -181,16 +181,57 @@ def global_search(request):
             search_terms.append(query[:-1])  # Remove 's' for singular
         else:
             search_terms.append(query + 's')  # Add 's' for plural
+        
+        # Add common word variations and synonyms
+        word_variations = {
+            'necklace': ['necklaces', 'chain', 'chains', 'pendant', 'pendants'],
+            'earring': ['earrings', 'ear ring', 'ear rings'],
+            'ring': ['rings', 'band', 'bands'],
+            'bracelet': ['bracelets', 'bangle', 'bangles'],
+            'diamond': ['diamonds', 'gem', 'gems', 'stone', 'stones'],
+            'gold': ['golden', 'yellow gold', 'rose gold', 'white gold'],
+            'silver': ['silver plated', 'sterling silver'],
+            'vase': ['vases', 'pottery', 'ceramic'],
+            'lamp': ['lamps', 'lighting', 'light'],
+            'candle': ['candles', 'candlestick', 'candlesticks'],
+            'bowl': ['bowls', 'dish', 'dishes'],
+            'plate': ['plates', 'platter', 'platters'],
+            'cup': ['cups', 'mug', 'mugs', 'glass', 'glasses'],
+            'decor': ['decoration', 'decorative', 'ornament', 'ornaments'],
+            'home': ['house', 'interior', 'furnishing', 'furnishings']
+        }
+        
+        # Add variations based on the search term
+        query_lower = query.lower()
+        for key, variations in word_variations.items():
+            if key in query_lower:
+                search_terms.extend(variations)
+            # Also check if any variation matches
+            for variation in variations:
+                if variation in query_lower:
+                    search_terms.append(key)
+                    search_terms.extend(variations)
     
-    # Create comprehensive search query
+    # Remove duplicates and empty strings
+    search_terms = list(set([term for term in search_terms if term.strip()]))
+    
+    # Create comprehensive search query with word boundary matching
     search_query = Q()
     for term in search_terms:
+        # Exact word matching (word boundaries)
+        search_query |= (
+            Q(name__iregex=r'\b' + term + r'\b') |
+            Q(description__iregex=r'\b' + term + r'\b') |
+            Q(category__name__iregex=r'\b' + term + r'\b') |
+            Q(sku__icontains=term) |
+            Q(tags__icontains=term) if hasattr(Product, 'tags') else Q()
+        )
+        
+        # Partial matching (contains)
         search_query |= (
             Q(name__icontains=term) |
             Q(description__icontains=term) |
-            Q(category__name__icontains=term) |
-            Q(sku__icontains=term) |
-            Q(tags__icontains=term) if hasattr(Product, 'tags') else Q()
+            Q(category__name__icontains=term)
         )
     
     # Search across product name, description, category, and SKU
