@@ -718,11 +718,7 @@
                 const selectedStockStatus = Array.from(document.querySelectorAll('#stock-status-filter input:checked')).map(input => input.id);
                 const searchTerm = document.getElementById('search-input').value.toLowerCase();
                 
-                // If search term is more than 2 characters, use global search
-                if (searchTerm.length > 2) {
-                    performGlobalSearch(searchTerm);
-                    return;
-                }
+                // Always use local search for better performance
                 
                 filteredProducts = allProducts.filter(product => {
                     // Category filter
@@ -746,6 +742,16 @@
                 
                 currentPage = 1;
                 renderProducts();
+                updatePagination();
+                
+                // Show search results summary if there's a search term
+                if (searchTerm && searchTerm.length > 0) {
+                    if (filteredProducts.length > 0) {
+                        showSearchSummary(filteredProducts.length, searchTerm);
+                    } else {
+                        showNoResultsMessage(searchTerm);
+                    }
+                }
             }
             
             // Word variations function for enhanced search
@@ -791,57 +797,7 @@
                 return false;
             }
             
-            // Global search functionality
-            function performGlobalSearch(searchTerm) {
-                console.log('Performing local search for:', searchTerm);
-                
-                // Show loading state
-                const searchBtn = document.querySelector('.search-btn');
-                const originalContent = searchBtn.innerHTML;
-                searchBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-                searchBtn.disabled = true;
-                
-                // Use setTimeout to show loading state briefly
-                setTimeout(() => {
-                    try {
-                        // Search through local products
-                        const searchResults = allProducts.filter(product => {
-                            const searchMatch = searchTerm === '' || 
-                                product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                                product.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                                product.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                                checkWordVariations(product.name.toLowerCase(), searchTerm.toLowerCase()) ||
-                                checkWordVariations(product.category.toLowerCase(), searchTerm.toLowerCase()) ||
-                                checkWordVariations(product.description.toLowerCase(), searchTerm.toLowerCase());
-                            
-                            return searchMatch;
-                        });
-                        
-                        console.log('Search results:', searchResults.length);
-                        
-                        if (searchResults.length > 0) {
-                            // Update the products display with search results
-                            filteredProducts = searchResults;
-                            currentPage = 1;
-                            renderProducts();
-                            updatePagination();
-                            
-                            // Show search results summary
-                            showSearchSummary(searchResults.length, searchTerm);
-                        } else {
-                            // No results found
-                            showNoResultsMessage(searchTerm);
-                        }
-                    } catch (error) {
-                        console.error('Search error:', error);
-                        showNotification('Search failed. Please try again.', 'error');
-                    } finally {
-                        // Reset button state
-                        searchBtn.innerHTML = originalContent;
-                        searchBtn.disabled = false;
-                    }
-                }, 300); // Brief loading state
-            }
+            // Search functionality is now handled by filterProducts() function
             
             // Show search results summary
             function showSearchSummary(count, searchTerm) {
