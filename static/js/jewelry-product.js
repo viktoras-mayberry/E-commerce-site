@@ -153,7 +153,35 @@
         }
         
         // Add to cart
-        async function addToCart(product, quantity = 1) {
+        function addToCart(product, quantity = 1) {
+            console.log('Adding to cart:', product);
+            
+            // Use localStorage as primary method for consistency
+            const existingItem = cart.find(item => item.id === product.id);
+            
+            if (existingItem) {
+                existingItem.quantity += quantity;
+            } else {
+                cart.push({
+                    id: product.id,
+                    name: product.name,
+                    price: product.price,
+                    image: product.image,
+                    quantity: quantity
+                });
+            }
+            
+            localStorage.setItem('cart', JSON.stringify(cart));
+            updateCartCount();
+            showAddedToCartMessage(product.name);
+            renderCart();
+            
+            // Try to sync with backend (optional)
+            syncCartWithBackend();
+        }
+        
+        // Sync cart with backend (optional)
+        async function syncCartWithBackend() {
             try {
                 const csrfToken = getCSRFToken();
                 const response = await fetch(API_ENDPOINTS.CART + 'items/', {
@@ -163,106 +191,49 @@
                         'X-CSRFToken': csrfToken
                     },
                     body: JSON.stringify({
-                        product: product.id,
-                        quantity: quantity
+                        product: cart[cart.length - 1].id,
+                        quantity: cart[cart.length - 1].quantity
                     })
                 });
                 
                 if (response.ok) {
-                    updateCartCount();
-                    showAddedToCartMessage(product.name);
-                    renderCart();
-                } else {
-                    throw new Error('Failed to add to cart');
+                    console.log('Cart synced with backend');
                 }
             } catch (error) {
-                console.error('Error adding to cart:', error);
-                // Fallback to local storage
-                const existingItem = cart.find(item => item.id === product.id);
-                
-                if (existingItem) {
-                    existingItem.quantity += quantity;
-                } else {
-                    cart.push({
-                        id: product.id,
-                        name: product.name,
-                        price: product.price,
-                        image: product.primary_image?.image || product.image,
-                        quantity: quantity
-                    });
-                }
-                
-                localStorage.setItem('cart', JSON.stringify(cart));
-                updateCartCount();
-                showAddedToCartMessage(product.name);
+                console.log('Backend sync failed, using localStorage only');
             }
         }
         
         // Remove from cart
-        async function removeFromCart(cartItemId) {
-            try {
-                const response = await fetch(`${API_ENDPOINTS.CART}items/${cartItemId}/delete/`, {
-                    method: 'DELETE',
-                    headers: {
-                        'X-CSRFToken': getCookie('csrftoken')
-                    }
-                });
-                
-                if (response.ok) {
-                    updateCartCount();
-                    renderCart();
-                } else {
-                    throw new Error('Failed to remove item');
-                }
-            } catch (error) {
-                console.error('Error removing from cart:', error);
-                // Fallback to local storage
-                cart = cart.filter(item => item.id !== cartItemId);
-                localStorage.setItem('cart', JSON.stringify(cart));
-                updateCartCount();
-                renderCart();
-            }
+        function removeFromCart(cartItemId) {
+            console.log('Removing from cart:', cartItemId);
+            
+            // Use localStorage as primary method
+            cart = cart.filter(item => item.id !== cartItemId);
+            localStorage.setItem('cart', JSON.stringify(cart));
+            updateCartCount();
+            renderCart();
         }
         
         // Update quantity
-        async function updateQuantity(cartItemId, quantityChange, isAbsolute = false) {
-            try {
-                const response = await fetch(`${API_ENDPOINTS.CART}items/${cartItemId}/`, {
-                    method: 'PATCH',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': getCookie('csrftoken')
-                    },
-                    body: JSON.stringify({
-                        quantity: isAbsolute ? quantityChange : undefined,
-                        quantity_change: isAbsolute ? undefined : quantityChange
-                    })
-                });
+        function updateQuantity(cartItemId, quantityChange, isAbsolute = false) {
+            console.log('Updating quantity:', cartItemId, quantityChange, isAbsolute);
+            
+            // Use localStorage as primary method
+            const item = cart.find(item => item.id === cartItemId);
+            if (item) {
+                if (isAbsolute) {
+                    item.quantity = quantityChange;
+                } else {
+                    item.quantity += quantityChange;
+                }
                 
-                if (response.ok) {
+                if (item.quantity <= 0) {
+                    removeFromCart(cartItemId);
+                } else {
+                    localStorage.setItem('cart', JSON.stringify(cart));
                     updateCartCount();
                     renderCart();
-                } else {
-                    throw new Error('Failed to update quantity');
-                }
-            } catch (error) {
-                console.error('Error updating quantity:', error);
-                // Fallback to local storage
-                const item = cart.find(item => item.id === cartItemId);
-                if (item) {
-                    if (isAbsolute) {
-                        item.quantity = quantityChange;
-                    } else {
-                        item.quantity += quantityChange;
-                    }
-                    
-                    if (item.quantity <= 0) {
-                        removeFromCart(cartItemId);
-                    } else {
-                        localStorage.setItem('cart', JSON.stringify(cart));
-                        updateCartCount();
-                        renderCart();
-                    }
                 }
             }
         }
@@ -306,23 +277,12 @@
         }
         
         // Render cart items
-        async function renderCart() {
+        function renderCart() {
+            console.log('Rendering cart with', cart.length, 'items');
             const cartItems = document.getElementById('cart-items');
             const cartTotal = document.getElementById('cart-total');
             
-            try {
-                // Fetch cart from backend
-                const response = await fetch(API_ENDPOINTS.CART);
-                if (response.ok) {
-                    const cartData = await response.json();
-                    renderCartItems(cartData);
-                    return;
-                }
-            } catch (error) {
-                console.error('Error fetching cart:', error);
-            }
-            
-            // Fallback to local storage
+            // Use localStorage as primary method
             if (cart.length === 0) {
                 cartItems.innerHTML = `
                     <div class="empty-cart">

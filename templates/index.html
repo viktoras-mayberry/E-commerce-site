@@ -1449,41 +1449,65 @@
                 showTestimonial(nextTestimonial);
             }, 4000);
             
-            // Add to cart functionality (delegated event listener for dynamic content)
+            // Cart functionality
+            let cart = JSON.parse(localStorage.getItem('cart')) || [];
             const cartCount = document.querySelector('.cart-count');
-            let count = parseInt(localStorage.getItem('cartCount')) || 0;
-            cartCount.textContent = count;
             
+            // Update cart count display
+            function updateCartCount() {
+                const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+                cartCount.textContent = totalItems;
+                localStorage.setItem('cart', JSON.stringify(cart));
+            }
+            
+            // Add to cart function
+            function addToCart(productId, productName, productPrice, productImage) {
+                const existingItem = cart.find(item => item.id === productId);
+                
+                if (existingItem) {
+                    existingItem.quantity += 1;
+                } else {
+                    cart.push({
+                        id: productId,
+                        name: productName,
+                        price: parseFloat(productPrice),
+                        image: productImage,
+                        quantity: 1
+                    });
+                }
+                
+                updateCartCount();
+                
+                // Animation for cart icon
+                const cartIcon = document.querySelector('.fa-shopping-cart');
+                if (cartIcon) {
+                    cartIcon.parentNode.classList.add('animate__tada');
+                    setTimeout(() => {
+                        cartIcon.parentNode.classList.remove('animate__tada');
+                    }, 1000);
+                }
+                
+                // Show added message
+                alert(`${productName} added to cart!`);
+            }
+            
+            // Add to cart event listener
             document.addEventListener('click', function(e) {
                 if (e.target.classList.contains('add-to-cart')) {
                     e.preventDefault();
-                    count++;
-                    cartCount.textContent = count;
                     
-                    // Animation for cart icon
-                    const cartIcon = document.querySelector('.fa-shopping-cart');
-                    if (cartIcon) {
-                        cartIcon.parentNode.classList.add('animate__tada');
-                        setTimeout(() => {
-                            cartIcon.parentNode.classList.remove('animate__tada');
-                        }, 1000);
-                    }
+                    const productCard = e.target.closest('.product-card');
+                    const productId = e.target.getAttribute('data-product-id');
+                    const productName = productCard.querySelector('.product-name').textContent;
+                    const productPrice = productCard.querySelector('.product-price').textContent.replace('₦', '');
+                    const productImage = productCard.querySelector('.product-img').src;
                     
-                    // Show added message
-                    const productName = e.target.closest('.product-card').querySelector('.product-name').textContent;
-                    alert(`${productName} added to cart!`);
-                    
-                    // Store in local storage
-                    localStorage.setItem('cartCount', count);
+                    addToCart(productId, productName, productPrice, productImage);
                 }
             });
             
-            // Load cart count from local storage
-            const savedCount = localStorage.getItem('cartCount');
-            if (savedCount) {
-                count = parseInt(savedCount);
-                cartCount.textContent = count;
-            }
+            // Initialize cart count
+            updateCartCount();
             
             // Dropdown menu for mobile - Fixed to properly handle clicks
             const dropdowns = document.querySelectorAll('.dropdown > .nav-link');

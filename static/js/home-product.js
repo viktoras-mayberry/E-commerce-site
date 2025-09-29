@@ -152,6 +152,9 @@
         
         // Add to cart
         function addToCart(product, quantity = 1) {
+            console.log('Adding to cart:', product);
+            
+            // Use localStorage as primary method for consistency
             const existingItem = cart.find(item => item.id === product.id);
             
             if (existingItem) {
@@ -169,6 +172,34 @@
             localStorage.setItem('cart', JSON.stringify(cart));
             updateCartCount();
             showAddedToCartMessage(product.name);
+            renderCartItems();
+            
+            // Try to sync with backend (optional)
+            syncCartWithBackend();
+        }
+        
+        // Sync cart with backend (optional)
+        async function syncCartWithBackend() {
+            try {
+                const csrfToken = getCSRFToken();
+                const response = await fetch(API_ENDPOINTS.CART + 'items/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: JSON.stringify({
+                        product: cart[cart.length - 1].id,
+                        quantity: cart[cart.length - 1].quantity
+                    })
+                });
+                
+                if (response.ok) {
+                    console.log('Cart synced with backend');
+                }
+            } catch (error) {
+                console.log('Backend sync failed, using localStorage only');
+            }
         }
         
         // Remove from cart
