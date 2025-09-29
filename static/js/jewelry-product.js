@@ -76,8 +76,8 @@
                 "https://images.unsplash.com/photo-1551649001-7a2482d98d09"
             ];
             
-            // Generate 1000 products with stock information
-            for (let i = 1; i <= 1000; i++) {
+            // Generate 200 products with stock information
+            for (let i = 1; i <= 200; i++) {
                 const category = categories[Math.floor(Math.random() * categories.length)];
                 const material = materials[Math.floor(Math.random() * materials.length)];
                 const adjective = adjectives[Math.floor(Math.random() * adjectives.length)];
@@ -114,14 +114,18 @@
         // Fetch products from API
         async function fetchProducts() {
             try {
+                console.log('Fetching products from API...');
                 const response = await fetch(API_ENDPOINTS.PRODUCTS);
+                console.log('API response status:', response.status);
                 if (response.ok) {
                     const data = await response.json();
+                    console.log('API data received:', data);
                     return data.results || data; // Handle pagination
                 }
                 throw new Error(`API error: ${response.status}`);
             } catch (error) {
                 console.error('Error fetching products:', error);
+                console.log('Falling back to demo products...');
                 // Fall back to demo products if API is not available
                 return generateDemoProducts();
             }
@@ -1146,11 +1150,26 @@
             
             // Initialize the page
             async function initPage() {
+                console.log('Initializing jewelry page...');
                 showLoading();
                 
-                // Fetch products
-                allProducts = await fetchProducts();
-                filteredProducts = [...allProducts];
+                try {
+                    // Fetch products with timeout
+                    console.log('Fetching products...');
+                    const fetchPromise = fetchProducts();
+                    const timeoutPromise = new Promise((_, reject) => 
+                        setTimeout(() => reject(new Error('Fetch timeout')), 10000)
+                    );
+                    
+                    allProducts = await Promise.race([fetchPromise, timeoutPromise]);
+                    console.log('Products fetched:', allProducts.length);
+                    filteredProducts = [...allProducts];
+                } catch (error) {
+                    console.error('Error during initialization:', error);
+                    // Use minimal demo products as fallback
+                    allProducts = generateDemoProducts().slice(0, 20);
+                    filteredProducts = [...allProducts];
+                }
                 
                 // Add event listeners to filter options
                 document.querySelectorAll('.filter-option input').forEach(checkbox => {
@@ -1185,6 +1204,10 @@
                 
                 // Initial render
                 renderProducts();
+                
+                // Hide loading overlay
+                hideLoading();
+                console.log('Jewelry page initialization complete');
                 
                 // Dropdown menu for mobile
                 const dropdowns = document.querySelectorAll('.dropdown');
