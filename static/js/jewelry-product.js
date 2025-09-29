@@ -767,6 +767,7 @@
                     productsToRender.forEach((product, index) => {
                         const productEl = document.createElement('div');
                         productEl.className = 'product-card';
+                        productEl.setAttribute('data-product-id', product.id);
                         productEl.setAttribute('data-category', product.category);
                         productEl.setAttribute('data-price', product.price);
                         productEl.setAttribute('data-stock', product.stockStatus);
