@@ -1631,6 +1631,15 @@
                         animation: modalSlideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
                     }
                     
+                    .search-modal-content::-webkit-scrollbar {
+                        display: none;
+                    }
+                    
+                    .search-modal-content {
+                        -ms-overflow-style: none;
+                        scrollbar-width: none;
+                    }
+                    
                     @keyframes modalSlideIn {
                         from {
                             opacity: 0;
