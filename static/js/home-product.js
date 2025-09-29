@@ -109,23 +109,36 @@
             return products;
         };
 
-        // Fetch products from backend API
-        const fetchProducts = async () => {
+        // Get products from backend data
+        function getBackendProducts() {
             try {
-                // In a real application, you would fetch from your API
-                // const response = await fetch(API_ENDPOINTS.PRODUCTS);
-                // const data = await response.json();
-                // return data.products;
-                
-                // For demo purposes, we'll simulate an API failure
-                throw new Error("API connection failed");
-                
+                console.log('Using backend products data...');
+                if (window.BACKEND_PRODUCTS) {
+                    const products = JSON.parse(window.BACKEND_PRODUCTS);
+                    console.log('Backend products loaded:', products.length);
+                    
+                    // Convert Django serialized format to our expected format
+                    return products.map(item => ({
+                        id: item.pk,
+                        name: item.fields.name,
+                        description: item.fields.description,
+                        price: parseFloat(item.fields.price),
+                        image: item.fields.primary_image || 'https://via.placeholder.com/300',
+                        category: item.fields.category_name || 'home decor',
+                        stock: item.fields.stock_quantity || 0,
+                        stockStatus: item.fields.stock_quantity > 0 ? 'in-stock' : 'out-of-stock',
+                        is_featured: item.fields.is_featured,
+                        is_bestseller: item.fields.is_bestseller,
+                        is_new_arrival: item.fields.is_new_arrival
+                    }));
+                }
+                throw new Error('No backend products data available');
             } catch (error) {
-                console.error('Error fetching products:', error);
-                // Return demo products as fallback
+                console.error('Error parsing backend products:', error);
+                console.log('Falling back to demo products...');
                 return generateDemoProducts();
             }
-        };
+        }
 
         // Cart functionality
         let cart = JSON.parse(localStorage.getItem('cart')) || [];
@@ -910,8 +923,8 @@
             async function initPage() {
                 showLoading();
                 
-                // Fetch products from backend
-                allProducts = await fetchProducts();
+                // Get products from backend data
+                allProducts = getBackendProducts();
                 filteredProducts = [...allProducts];
                 
                 // Add event listeners to filter options

@@ -17,11 +17,22 @@ def home(request):
     # Get categories
     categories = Category.objects.filter(is_active=True)[:10]
     
+    # Serialize products for JavaScript
+    from django.core import serializers
+    featured_json = serializers.serialize('json', featured_products)
+    new_arrivals_json = serializers.serialize('json', new_arrivals)
+    best_sellers_json = serializers.serialize('json', best_sellers)
+    categories_json = serializers.serialize('json', categories)
+    
     context = {
         'featured_products': featured_products,
         'new_arrivals': new_arrivals,
         'best_sellers': best_sellers,
         'categories': categories,
+        'featured_json': featured_json,
+        'new_arrivals_json': new_arrivals_json,
+        'best_sellers_json': best_sellers_json,
+        'categories_json': categories_json,
     }
     return render(request, 'index.html', context)
 
@@ -37,10 +48,17 @@ def jewelry_page(request):
         # Get categories
         categories = Category.objects.filter(is_active=True)
         
+        # Serialize products for JavaScript
+        from django.core import serializers
+        products_json = serializers.serialize('json', jewelry_products)
+        categories_json = serializers.serialize('json', categories)
+        
         context = {
             'products': jewelry_products,
             'categories': categories,
             'current_category': 'Jewelry',
+            'products_json': products_json,
+            'categories_json': categories_json,
         }
         
         print(f"Jewelry page - Products found: {jewelry_products.count()}")
@@ -64,10 +82,17 @@ def home_decor_page(request):
     # Get categories
     categories = Category.objects.filter(is_active=True)
     
+    # Serialize products for JavaScript
+    from django.core import serializers
+    products_json = serializers.serialize('json', home_decor_products)
+    categories_json = serializers.serialize('json', categories)
+    
     context = {
         'products': home_decor_products,
         'categories': categories,
         'current_category': 'Home Decor',
+        'products_json': products_json,
+        'categories_json': categories_json,
     }
     return render(request, 'home-product.html', context)
 

@@ -111,22 +111,33 @@
             return products;
         };
 
-        // Fetch products from API
-        async function fetchProducts() {
+        // Get products from backend data
+        function getBackendProducts() {
             try {
-                console.log('Fetching products from API...');
-                const response = await fetch(API_ENDPOINTS.PRODUCTS);
-                console.log('API response status:', response.status);
-                if (response.ok) {
-                    const data = await response.json();
-                    console.log('API data received:', data);
-                    return data.results || data; // Handle pagination
+                console.log('Using backend products data...');
+                if (window.BACKEND_PRODUCTS) {
+                    const products = JSON.parse(window.BACKEND_PRODUCTS);
+                    console.log('Backend products loaded:', products.length);
+                    
+                    // Convert Django serialized format to our expected format
+                    return products.map(item => ({
+                        id: item.pk,
+                        name: item.fields.name,
+                        description: item.fields.description,
+                        price: parseFloat(item.fields.price),
+                        image: item.fields.primary_image || 'https://via.placeholder.com/300',
+                        category: item.fields.category_name || 'jewelry',
+                        stock: item.fields.stock_quantity || 0,
+                        stockStatus: item.fields.stock_quantity > 0 ? 'in-stock' : 'out-of-stock',
+                        is_featured: item.fields.is_featured,
+                        is_bestseller: item.fields.is_bestseller,
+                        is_new_arrival: item.fields.is_new_arrival
+                    }));
                 }
-                throw new Error(`API error: ${response.status}`);
+                throw new Error('No backend products data available');
             } catch (error) {
-                console.error('Error fetching products:', error);
+                console.error('Error parsing backend products:', error);
                 console.log('Falling back to demo products...');
-                // Fall back to demo products if API is not available
                 return generateDemoProducts();
             }
         }
@@ -1154,15 +1165,10 @@
                 showLoading();
                 
                 try {
-                    // Fetch products with timeout
-                    console.log('Fetching products...');
-                    const fetchPromise = fetchProducts();
-                    const timeoutPromise = new Promise((_, reject) => 
-                        setTimeout(() => reject(new Error('Fetch timeout')), 10000)
-                    );
-                    
-                    allProducts = await Promise.race([fetchPromise, timeoutPromise]);
-                    console.log('Products fetched:', allProducts.length);
+                    // Get products from backend data
+                    console.log('Loading products from backend...');
+                    allProducts = getBackendProducts();
+                    console.log('Products loaded:', allProducts.length);
                     filteredProducts = [...allProducts];
                 } catch (error) {
                     console.error('Error during initialization:', error);
