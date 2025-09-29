@@ -333,10 +333,16 @@ def analytics_dashboard(request):
     
     # Cart analytics
     from orders.models import Cart, CartItem
+    from django.db.models import F, ExpressionWrapper, DecimalField
+    
     total_carts = Cart.objects.count()
     active_carts = Cart.objects.filter(updated_at__gte=start_date).count()
     total_cart_items = CartItem.objects.count()
-    total_cart_value = CartItem.objects.aggregate(total=Sum('total_price'))['total'] or 0
+    
+    # Calculate total cart value using product price * quantity
+    total_cart_value = CartItem.objects.aggregate(
+        total=Sum(ExpressionWrapper(F('product__price') * F('quantity'), output_field=DecimalField()))
+    )['total'] or 0
     
     # Most popular products in carts
     popular_cart_products = CartItem.objects.values('product__name').annotate(

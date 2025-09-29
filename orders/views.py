@@ -204,8 +204,9 @@ def cart_stats(request):
     total_cart_items = CartItem.objects.count()
     
     # Total cart value
+    from django.db.models import F, ExpressionWrapper, DecimalField
     total_cart_value = CartItem.objects.aggregate(
-        total=Sum('total_price')
+        total=Sum(ExpressionWrapper(F('product__price') * F('quantity'), output_field=DecimalField()))
     )['total'] or 0
     
     # Most popular products in carts
